@@ -43,7 +43,7 @@ window.OrthoKine = window.OrthoKine || {};
         en: "Settings saved successfully!",
         es: "¡Ajustes guardados con éxito!"
       };
-      alert(successMessages[store.lang]);
+      alert(OrthoKine.getLangValue(successMessages));
     });
 
     translateLocalDOM();
@@ -56,16 +56,16 @@ window.OrthoKine = window.OrthoKine || {};
     // Translate [data-i18n] text elements
     document.querySelectorAll("[data-i18n]").forEach(elem => {
       const key = elem.getAttribute("data-i18n");
-      const trans = OrthoKine.translations;
-      if (trans[key] && trans[key][currentLang]) {
+      const translatedValue = OrthoKine.getTranslation(key);
+      if (translatedValue) {
         const icon = elem.querySelector("i");
         if (icon) {
           const textSpan = elem.querySelector("span");
           if (textSpan) {
-            textSpan.textContent = trans[key][currentLang];
+            textSpan.textContent = translatedValue;
           }
         } else {
-          elem.textContent = trans[key][currentLang];
+          elem.textContent = translatedValue;
         }
       }
     });
@@ -73,9 +73,9 @@ window.OrthoKine = window.OrthoKine || {};
     // Translate input placeholders
     document.querySelectorAll("[data-i18n-placeholder]").forEach(elem => {
       const key = elem.getAttribute("data-i18n-placeholder");
-      const trans = OrthoKine.translations;
-      if (trans[key] && trans[key][currentLang]) {
-        elem.setAttribute("placeholder", trans[key][currentLang]);
+      const translatedValue = OrthoKine.getTranslation(key);
+      if (translatedValue) {
+        elem.setAttribute("placeholder", translatedValue);
       }
     });
 

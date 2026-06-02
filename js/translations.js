@@ -16,7 +16,7 @@ OrthoKine.escapeHTML = function(str) {
 OrthoKine.getTranslation = function(key) {
   if (typeof key !== 'string') return "";
   if (!Object.prototype.hasOwnProperty.call(OrthoKine.translations, key)) return "";
-  const entry = OrthoKine.translations[key];
+  const entry = Reflect.get(OrthoKine.translations, key);
   const lang = OrthoKine.store ? OrthoKine.store.lang : "fr";
   if (lang === "en") return entry.en || entry.fr || "";
   if (lang === "es") return entry.es || entry.fr || "";

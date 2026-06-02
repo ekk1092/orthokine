@@ -53,14 +53,23 @@ window.OrthoKine = window.OrthoKine || {};
                                    (OrthoKine.getTranslation('role_ortho') || s.specialty) : 
                                    (OrthoKine.getTranslation('role_kine') || s.specialty);
 
-      const opt = `<option value="${OrthoKine.escapeHTML(s.id)}">${OrthoKine.escapeHTML(s.name)} (${OrthoKine.escapeHTML(specialtyTranslation)})</option>`;
-      pTherapistSelect.insertAdjacentHTML("beforeend", opt);
-      aptTherapistSelect.insertAdjacentHTML("beforeend", opt);
+      const opt1 = document.createElement("option");
+      opt1.value = s.id;
+      opt1.textContent = `${s.name} (${specialtyTranslation})`;
+      pTherapistSelect.appendChild(opt1);
+
+      const opt2 = document.createElement("option");
+      opt2.value = s.id;
+      opt2.textContent = `${s.name} (${specialtyTranslation})`;
+      aptTherapistSelect.appendChild(opt2);
     });
 
     // Repopulate Patients
     store.patients.forEach(p => {
-      aptPatientSelect.insertAdjacentHTML("beforeend", `<option value="${OrthoKine.escapeHTML(p.id)}">${OrthoKine.escapeHTML(p.name)}</option>`);
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name;
+      aptPatientSelect.appendChild(opt);
     });
 
     // Repopulate Calendar filter
@@ -71,7 +80,10 @@ window.OrthoKine = window.OrthoKine || {};
     allOption.textContent = allTherapistsTranslation;
     calTherapistFilter.appendChild(allOption);
     store.staff.forEach(s => {
-      calTherapistFilter.insertAdjacentHTML("beforeend", `<option value="${OrthoKine.escapeHTML(s.id)}">${OrthoKine.escapeHTML(s.name)}</option>`);
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.name;
+      calTherapistFilter.appendChild(opt);
     });
 
     // Restore values
@@ -340,7 +352,8 @@ window.OrthoKine = window.OrthoKine || {};
       es: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
     };
     
-    monthYearLabel.textContent = `${OrthoKine.getLangValue(monthNames)[month]} ${year}`;
+    const names = OrthoKine.getLangValue(monthNames);
+    monthYearLabel.textContent = `${names.at(month)} ${year}`;
 
     // Get first day of the month
     const firstDayIndex = new Date(year, month, 1).getDay();
