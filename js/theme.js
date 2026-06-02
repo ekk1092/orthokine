@@ -25,11 +25,11 @@ window.OrthoKine = window.OrthoKine || {};
     if (theme === "dark") {
       themeIcon.setAttribute("data-lucide", "moon");
       themeText.setAttribute("data-i18n", "theme_dark");
-      themeText.textContent = OrthoKine.translations.theme_dark[OrthoKine.store.lang] || "Mode Sombre";
+      themeText.textContent = OrthoKine.getTranslation('theme_dark') || "Mode Sombre";
     } else {
       themeIcon.setAttribute("data-lucide", "sun");
       themeText.setAttribute("data-i18n", "theme_light");
-      themeText.textContent = OrthoKine.translations.theme_light[OrthoKine.store.lang] || "Mode Clair";
+      themeText.textContent = OrthoKine.getTranslation('theme_light') || "Mode Clair";
     }
     lucide.createIcons();
   }

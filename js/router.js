@@ -22,9 +22,7 @@ window.OrthoKine = window.OrthoKine || {};
 
         // Update header title beautifully using dynamic localization keys
         const translationKey = link.querySelector("span").getAttribute("data-i18n");
-        const store = OrthoKine.store;
-        const translations = OrthoKine.translations;
-        title.textContent = translations[translationKey] ? translations[translationKey][store.lang] : link.querySelector("span").textContent;
+        title.textContent = OrthoKine.getTranslation(translationKey) || link.querySelector("span").textContent;
         
         // Render components dynamically based on target view
         OrthoKine.renderAll();
@@ -47,7 +45,7 @@ window.OrthoKine = window.OrthoKine || {};
       
       // Localize header title
       const profileTitles = { fr: "Mon Profil", en: "My Profile", es: "Mi Perfil" };
-      title.textContent = profileTitles[OrthoKine.store.lang];
+      title.textContent = OrthoKine.getLangValue(profileTitles);
 
       OrthoKine.renderAll();
     });

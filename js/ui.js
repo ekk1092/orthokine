@@ -7,11 +7,12 @@ window.OrthoKine = window.OrthoKine || {};
   // Translate dynamic dates based on active language
   function getLocalizedDateStr(dateStr) {
     const date = new Date(dateStr);
-    const locales = { fr: 'fr-FR', en: 'en-US', es: 'es-ES' };
+    const lang = OrthoKine.store.lang;
+    const locale = (lang === 'en') ? 'en-US' : (lang === 'es' ? 'es-ES' : 'fr-FR');
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     
     // Capitalize first letter of string
-    const val = date.toLocaleDateString(locales[OrthoKine.store.lang] || 'fr-FR', options);
+    const val = date.toLocaleDateString(locale, options);
     return val.charAt(0).toUpperCase() + val.slice(1);
   }
 
@@ -22,7 +23,6 @@ window.OrthoKine = window.OrthoKine || {};
     const aptTherapistSelect = document.getElementById("apt-therapist");
     const calTherapistFilter = document.getElementById("calendar-therapist-filter");
     const store = OrthoKine.store;
-    const translations = OrthoKine.translations;
 
     // Keep current selection values
     const prevPTherapist = pTherapistSelect.value;
@@ -32,30 +32,46 @@ window.OrthoKine = window.OrthoKine || {};
 
     // Clear options
     pTherapistSelect.innerHTML = "";
-    aptPatientSelect.innerHTML = `<option value=''>-- ${store.lang === 'fr' ? 'Sélectionner' : (store.lang === 'es' ? 'Seleccionar' : 'Select')} --</option>`;
-    aptTherapistSelect.innerHTML = `<option value=''>-- ${store.lang === 'fr' ? 'Sélectionner' : (store.lang === 'es' ? 'Seleccionar' : 'Select')} --</option>`;
+    
+    const selectLabel = store.lang === 'fr' ? 'Sélectionner' : (store.lang === 'es' ? 'Seleccionar' : 'Select');
+    
+    aptPatientSelect.innerHTML = "";
+    const pOption = document.createElement("option");
+    pOption.value = "";
+    pOption.textContent = `-- ${selectLabel} --`;
+    aptPatientSelect.appendChild(pOption);
+
+    aptTherapistSelect.innerHTML = "";
+    const tOption = document.createElement("option");
+    tOption.value = "";
+    tOption.textContent = `-- ${selectLabel} --`;
+    aptTherapistSelect.appendChild(tOption);
     
     // Repopulate Staff
     store.staff.forEach(s => {
       const specialtyTranslation = s.specialty === "Orthophoniste" ? 
-                                   (translations.role_ortho[store.lang] || s.specialty) : 
-                                   (translations.role_kine[store.lang] || s.specialty);
+                                   (OrthoKine.getTranslation('role_ortho') || s.specialty) : 
+                                   (OrthoKine.getTranslation('role_kine') || s.specialty);
 
-      const opt = `<option value="${s.id}">${s.name} (${specialtyTranslation})</option>`;
+      const opt = `<option value="${OrthoKine.escapeHTML(s.id)}">${OrthoKine.escapeHTML(s.name)} (${OrthoKine.escapeHTML(specialtyTranslation)})</option>`;
       pTherapistSelect.insertAdjacentHTML("beforeend", opt);
       aptTherapistSelect.insertAdjacentHTML("beforeend", opt);
     });
 
     // Repopulate Patients
     store.patients.forEach(p => {
-      aptPatientSelect.insertAdjacentHTML("beforeend", `<option value="${p.id}">${p.name}</option>`);
+      aptPatientSelect.insertAdjacentHTML("beforeend", `<option value="${OrthoKine.escapeHTML(p.id)}">${OrthoKine.escapeHTML(p.name)}</option>`);
     });
 
     // Repopulate Calendar filter
-    const allTherapistsTranslation = translations.filter_all_therapists[store.lang] || "Tous les thérapeutes";
-    calTherapistFilter.innerHTML = `<option value="all">${allTherapistsTranslation}</option>`;
+    const allTherapistsTranslation = OrthoKine.getTranslation('filter_all_therapists') || "Tous les thérapeutes";
+    calTherapistFilter.innerHTML = "";
+    const allOption = document.createElement("option");
+    allOption.value = "all";
+    allOption.textContent = allTherapistsTranslation;
+    calTherapistFilter.appendChild(allOption);
     store.staff.forEach(s => {
-      calTherapistFilter.insertAdjacentHTML("beforeend", `<option value="${s.id}">${s.name}</option>`);
+      calTherapistFilter.insertAdjacentHTML("beforeend", `<option value="${OrthoKine.escapeHTML(s.id)}">${OrthoKine.escapeHTML(s.name)}</option>`);
     });
 
     // Restore values
@@ -84,7 +100,7 @@ window.OrthoKine = window.OrthoKine || {};
     document.getElementById("live-time-badge").textContent = getLocalizedDateStr(todayStr);
 
     const appointmentsTranslation = store.lang === 'fr' ? 'rendez-vous' : (store.lang === 'es' ? 'citas' : 'appointments');
-    document.getElementById("today-rdv-count-badge").textContent = `${todayAppointments.length} ${appointmentsTranslation}`;
+    document.getElementById("today-rdv-count-badge").textContent = `${todayAppointments.length} ${OrthoKine.escapeHTML(appointmentsTranslation)}`;
 
     // Fill Today's Appointment Table
     const tbody = document.getElementById("today-appointments-table");
@@ -96,7 +112,16 @@ window.OrthoKine = window.OrthoKine || {};
         en: "No appointments scheduled for today.",
         es: "No hay citas programadas para hoy."
       };
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: hsl(var(--muted-foreground)); padding: 2rem;">${emptyTranslation[store.lang]}</td></tr>`;
+      tbody.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.style.textAlign = "center";
+      td.style.color = "hsl(var(--muted-foreground))";
+      td.style.padding = "2rem";
+      td.textContent = OrthoKine.getLangValue(emptyTranslation);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
       return;
     }
 
@@ -106,38 +131,68 @@ window.OrthoKine = window.OrthoKine || {};
     todayAppointments.forEach(apt => {
       const patient = store.patients.find(p => p.id === apt.patientId) || { name: "Unknown" };
       const staff = store.staff.find(s => s.id === apt.therapistId) || { name: "Unknown", specialty: "" };
-      const translations = OrthoKine.translations;
 
       const specialtyTranslation = staff.specialty === "Orthophoniste" ? 
-                                   (translations.role_ortho[store.lang] || staff.specialty) : 
-                                   (translations.role_kine[store.lang] || staff.specialty);
+                                   (OrthoKine.getTranslation('role_ortho') || staff.specialty) : 
+                                   (OrthoKine.getTranslation('role_kine') || staff.specialty);
 
-      const typeTranslation = apt.type === "Initial Evaluation" ? (translations.type_evaluation[store.lang] || apt.type) :
-                              (apt.type === "Speech Therapy Session" ? (translations.type_speech[store.lang] || apt.type) :
-                              (apt.type === "Kinesitherapy Session" ? (translations.type_kine[store.lang] || apt.type) :
-                              (translations.type_follow_up[store.lang] || apt.type)));
+      const typeTranslation = apt.type === "Initial Evaluation" ? (OrthoKine.getTranslation('type_evaluation') || apt.type) :
+                              (apt.type === "Speech Therapy Session" ? (OrthoKine.getTranslation('type_speech') || apt.type) :
+                              (apt.type === "Kinesitherapy Session" ? (OrthoKine.getTranslation('type_kine') || apt.type) :
+                              (OrthoKine.getTranslation('type_follow_up') || apt.type)));
 
       const statusBadge = apt.status === "Completed" ? "badge-success" : (apt.status === "Cancelled" ? "badge-danger" : "badge-primary");
-      const statusTranslation = apt.status === "Completed" ? (translations.status_completed[store.lang] || apt.status) :
-                                (apt.status === "Cancelled" ? (translations.status_cancelled[store.lang] || apt.status) :
-                                (translations.status_scheduled[store.lang] || apt.status));
+      const statusTranslation = apt.status === "Completed" ? (OrthoKine.getTranslation('status_completed') || apt.status) :
+                                (apt.status === "Cancelled" ? (OrthoKine.getTranslation('status_cancelled') || apt.status) :
+                                (OrthoKine.getTranslation('status_scheduled') || apt.status));
 
-      const tr = `
-        <tr>
-          <td style="font-weight: 700;">${apt.time}</td>
-          <td>
-            <div style="font-weight: 600;">${patient.name}</div>
-            <div style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">${patient.contact}</div>
-          </td>
-          <td>
-            <div style="font-weight: 500;">${staff.name}</div>
-            <div style="font-size: 0.75rem; color: hsl(var(--primary)); font-weight: 600;">${specialtyTranslation}</div>
-          </td>
-          <td><span class="badge badge-muted">${typeTranslation}</span></td>
-          <td><span class="badge ${statusBadge}">${statusTranslation}</span></td>
-        </tr>
-      `;
-      tbody.insertAdjacentHTML("beforeend", tr);
+      const row = document.createElement("tr");
+
+      // Time Cell
+      const timeCell = row.insertCell();
+      timeCell.style.fontWeight = "700";
+      timeCell.textContent = apt.time;
+
+      // Patient Info Cell
+      const patientCell = row.insertCell();
+      const patientNameDiv = document.createElement("div");
+      patientNameDiv.style.fontWeight = "600";
+      patientNameDiv.textContent = patient.name;
+      const patientContactDiv = document.createElement("div");
+      patientContactDiv.style.fontSize = "0.75rem";
+      patientContactDiv.style.color = "hsl(var(--muted-foreground))";
+      patientContactDiv.textContent = patient.contact;
+      patientCell.appendChild(patientNameDiv);
+      patientCell.appendChild(patientContactDiv);
+
+      // Staff Info Cell
+      const staffCell = row.insertCell();
+      const staffNameDiv = document.createElement("div");
+      staffNameDiv.style.fontWeight = "500";
+      staffNameDiv.textContent = staff.name;
+      const staffSpecDiv = document.createElement("div");
+      staffSpecDiv.style.fontSize = "0.75rem";
+      staffSpecDiv.style.color = "hsl(var(--primary))";
+      staffSpecDiv.style.fontWeight = "600";
+      staffSpecDiv.textContent = specialtyTranslation;
+      staffCell.appendChild(staffNameDiv);
+      staffCell.appendChild(staffSpecDiv);
+
+      // Type Cell
+      const typeCell = row.insertCell();
+      const typeSpan = document.createElement("span");
+      typeSpan.className = "badge badge-muted";
+      typeSpan.textContent = typeTranslation;
+      typeCell.appendChild(typeSpan);
+
+      // Status Cell
+      const statusCell = row.insertCell();
+      const statusSpan = document.createElement("span");
+      statusSpan.className = `badge ${statusBadge}`;
+      statusSpan.textContent = statusTranslation;
+      statusCell.appendChild(statusSpan);
+
+      tbody.appendChild(row);
     });
   }
 
@@ -146,7 +201,6 @@ window.OrthoKine = window.OrthoKine || {};
     const searchQuery = document.getElementById("patient-search-input").value.toLowerCase();
     const tbody = document.getElementById("patients-table-body");
     const store = OrthoKine.store;
-    const translations = OrthoKine.translations;
     tbody.innerHTML = "";
 
     const filteredPatients = store.patients.filter(p => {
@@ -161,7 +215,16 @@ window.OrthoKine = window.OrthoKine || {};
         en: "No matching patient profiles found.",
         es: "No se encontraron perfiles de pacientes correspondientes."
       };
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: hsl(var(--muted-foreground)); padding: 2rem;">${emptyMsg[store.lang]}</td></tr>`;
+      tbody.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 7;
+      td.style.textAlign = "center";
+      td.style.color = "hsl(var(--muted-foreground))";
+      td.style.padding = "2rem";
+      td.textContent = OrthoKine.getLangValue(emptyMsg);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
       return;
     }
 
@@ -172,34 +235,93 @@ window.OrthoKine = window.OrthoKine || {};
       if (p.status === "On Hold") statusClass = "badge-warning";
       if (p.status === "Discharged") statusClass = "badge-danger";
 
-      const statusTranslation = p.status === "Active" ? (translations.status_active[store.lang] || p.status) :
-                                (p.status === "On Hold" ? (translations.status_on_hold[store.lang] || p.status) :
-                                (translations.status_discharged[store.lang] || p.status));
+      const statusTranslation = p.status === "Active" ? (OrthoKine.getTranslation('status_active') || p.status) :
+                                (p.status === "On Hold" ? (OrthoKine.getTranslation('status_on_hold') || p.status) :
+                                (OrthoKine.getTranslation('status_discharged') || p.status));
 
-      const genderTranslation = p.gender === "Male" ? (translations.gender_male[store.lang] || p.gender) :
-                                (p.gender === "Female" ? (translations.gender_female[store.lang] || p.gender) :
-                                (translations.gender_other[store.lang] || p.gender));
+      const genderTranslation = p.gender === "Male" ? (OrthoKine.getTranslation('gender_male') || p.gender) :
+                                (p.gender === "Female" ? (OrthoKine.getTranslation('gender_female') || p.gender) :
+                                (OrthoKine.getTranslation('gender_other') || p.gender));
 
-      const tr = `
-        <tr>
-          <td>
-            <div style="font-weight: 700;">${p.name}</div>
-            <div style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">ID: ${p.id}</div>
-          </td>
-          <td>${p.age} / ${genderTranslation}</td>
-          <td><span class="badge badge-muted" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.condition}</span></td>
-          <td style="font-weight: 500; color: hsl(var(--primary));">${staff.name}</td>
-          <td>${p.contact}</td>
-          <td><span class="badge ${statusClass}">${statusTranslation}</span></td>
-          <td>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-secondary" onclick="OrthoKine.openPatientModal('${p.id}')" style="padding: 0.4rem; font-size: 0.8rem;"><i data-lucide="edit" style="width: 14px; height: 14px;"></i></button>
-              <button class="btn btn-danger" onclick="OrthoKine.deletePatientConfirm('${p.id}')" style="padding: 0.4rem; font-size: 0.8rem;"><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i></button>
-            </div>
-          </td>
-        </tr>
-      `;
-      tbody.insertAdjacentHTML("beforeend", tr);
+      const row = document.createElement("tr");
+
+      // Patient Info Cell
+      const nameCell = row.insertCell();
+      const patientNameDiv = document.createElement("div");
+      patientNameDiv.style.fontWeight = "700";
+      patientNameDiv.textContent = p.name;
+      const patientIdDiv = document.createElement("div");
+      patientIdDiv.style.fontSize = "0.75rem";
+      patientIdDiv.style.color = "hsl(var(--muted-foreground))";
+      patientIdDiv.textContent = `ID: ${p.id}`;
+      nameCell.appendChild(patientNameDiv);
+      nameCell.appendChild(patientIdDiv);
+
+      // Age / Gender Cell
+      const ageGenderCell = row.insertCell();
+      ageGenderCell.textContent = `${p.age} / ${genderTranslation}`;
+
+      // Condition Cell
+      const conditionCell = row.insertCell();
+      const conditionSpan = document.createElement("span");
+      conditionSpan.className = "badge badge-muted";
+      conditionSpan.style.maxWidth = "180px";
+      conditionSpan.style.overflow = "hidden";
+      conditionSpan.style.textOverflow = "ellipsis";
+      conditionSpan.style.whiteSpace = "nowrap";
+      conditionSpan.textContent = p.condition;
+      conditionCell.appendChild(conditionSpan);
+
+      // Assigned Therapist Cell
+      const therapistCell = row.insertCell();
+      therapistCell.style.fontWeight = "500";
+      therapistCell.style.color = "hsl(var(--primary))";
+      therapistCell.textContent = staff.name;
+
+      // Contact Cell
+      const contactCell = row.insertCell();
+      contactCell.textContent = p.contact;
+
+      // Status Cell
+      const statusCell = row.insertCell();
+      const statusSpan = document.createElement("span");
+      statusSpan.className = `badge ${statusClass}`;
+      statusSpan.textContent = statusTranslation;
+      statusCell.appendChild(statusSpan);
+
+      // Actions Cell
+      const actionsCell = row.insertCell();
+      const btnContainer = document.createElement("div");
+      btnContainer.style.display = "flex";
+      btnContainer.style.gap = "0.5rem";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-secondary";
+      editBtn.style.padding = "0.4rem";
+      editBtn.style.fontSize = "0.8rem";
+      editBtn.onclick = () => { OrthoKine.openPatientModal(p.id); };
+      const editIcon = document.createElement("i");
+      editIcon.setAttribute("data-lucide", "edit");
+      editIcon.style.width = "14px";
+      editIcon.style.height = "14px";
+      editBtn.appendChild(editIcon);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-danger";
+      deleteBtn.style.padding = "0.4rem";
+      deleteBtn.style.fontSize = "0.8rem";
+      deleteBtn.onclick = () => { OrthoKine.deletePatientConfirm(p.id); };
+      const deleteIcon = document.createElement("i");
+      deleteIcon.setAttribute("data-lucide", "trash-2");
+      deleteIcon.style.width = "14px";
+      deleteIcon.style.height = "14px";
+      deleteBtn.appendChild(deleteIcon);
+
+      btnContainer.appendChild(editBtn);
+      btnContainer.appendChild(deleteBtn);
+      actionsCell.appendChild(btnContainer);
+
+      tbody.appendChild(row);
     });
   }
 
@@ -218,7 +340,7 @@ window.OrthoKine = window.OrthoKine || {};
       es: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
     };
     
-    monthYearLabel.textContent = `${monthNames[store.lang][month]} ${year}`;
+    monthYearLabel.textContent = `${OrthoKine.getLangValue(monthNames)[month]} ${year}`;
 
     // Get first day of the month
     const firstDayIndex = new Date(year, month, 1).getDay();
@@ -231,12 +353,13 @@ window.OrthoKine = window.OrthoKine || {};
     // 1. Fill previous month dates (muted)
     for (let i = adjustedFirstDay - 1; i >= 0; i--) {
       const day = prevMonthTotalDays - i;
-      const cell = `
-        <div class="calendar-cell muted">
-          <span class="calendar-cell-num">${day}</span>
-        </div>
-      `;
-      container.insertAdjacentHTML("beforeend", cell);
+      const cell = document.createElement("div");
+      cell.className = "calendar-cell muted";
+      const numSpan = document.createElement("span");
+      numSpan.className = "calendar-cell-num";
+      numSpan.textContent = day;
+      cell.appendChild(numSpan);
+      container.appendChild(cell);
     }
 
     // 2. Fill active month dates
@@ -252,48 +375,72 @@ window.OrthoKine = window.OrthoKine || {};
       const isToday = formattedDate === "2026-06-02";
       const cellClass = isToday ? "calendar-cell today" : "calendar-cell";
 
-      // Injected appointment lists
-      let aptHtml = "";
+      const cell = document.createElement("div");
+      cell.className = cellClass;
+      cell.onclick = () => { OrthoKine.openAppointmentForDate(formattedDate); };
+
+      const numSpan = document.createElement("span");
+      numSpan.className = "calendar-cell-num";
+      numSpan.textContent = day;
+      cell.appendChild(numSpan);
+
+      const eventsDiv = document.createElement("div");
+      eventsDiv.className = "calendar-cell-events";
+
       dayApts.slice(0, 3).forEach(apt => {
         const patient = store.patients.find(p => p.id === apt.patientId) || { name: "Unknown" };
         const therapist = store.staff.find(s => s.id === apt.therapistId) || { specialty: "" };
         
-        const styleClass = therapist.specialty === "Orthophoniste" ? 
-                           "background-color: hsl(var(--primary) / 0.15); color: hsl(var(--primary));" : 
-                           "background-color: hsl(var(--accent) / 0.15); color: hsl(var(--accent));";
+        const eventDot = document.createElement("div");
+        eventDot.className = "calendar-event-dot";
+        if (therapist.specialty === "Orthophoniste") {
+          eventDot.style.backgroundColor = "hsl(var(--primary) / 0.15)";
+          eventDot.style.color = "hsl(var(--primary))";
+        } else {
+          eventDot.style.backgroundColor = "hsl(var(--accent) / 0.15)";
+          eventDot.style.color = "hsl(var(--accent))";
+        }
+        eventDot.onclick = (e) => {
+          e.stopPropagation();
+          OrthoKine.openAppointmentModal(apt.id);
+        };
 
-        aptHtml += `
-          <div class="calendar-event-dot" style="${styleClass}" onclick="event.stopPropagation(); OrthoKine.openAppointmentModal('${apt.id}')">
-            <strong>${apt.time}</strong> <span>${patient.name}</span>
-          </div>
-        `;
+        const timeStrong = document.createElement("strong");
+        timeStrong.textContent = apt.time;
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = patient.name;
+        
+        eventDot.appendChild(timeStrong);
+        eventDot.appendChild(document.createTextNode(" "));
+        eventDot.appendChild(nameSpan);
+        eventsDiv.appendChild(eventDot);
       });
 
       if (dayApts.length > 3) {
         const moreStr = store.lang === 'fr' ? 'de plus' : (store.lang === 'es' ? 'más' : 'more');
-        aptHtml += `<div style="font-size: 0.7rem; font-weight: 700; text-align: center; color: hsl(var(--muted-foreground));">+${dayApts.length - 3} ${moreStr}</div>`;
+        const moreDiv = document.createElement("div");
+        moreDiv.style.fontSize = "0.7rem";
+        moreDiv.style.fontWeight = "700";
+        moreDiv.style.textAlign = "center";
+        moreDiv.style.color = "hsl(var(--muted-foreground))";
+        moreDiv.textContent = `+${dayApts.length - 3} ${moreStr}`;
+        eventsDiv.appendChild(moreDiv);
       }
 
-      const cell = `
-        <div class="${cellClass}" onclick="OrthoKine.openAppointmentForDate('${formattedDate}')">
-          <span class="calendar-cell-num">${day}</span>
-          <div class="calendar-cell-events">
-            ${aptHtml}
-          </div>
-        </div>
-      `;
-      container.insertAdjacentHTML("beforeend", cell);
+      cell.appendChild(eventsDiv);
+      container.appendChild(cell);
     }
 
     // 3. Fill remaining space to keep calendar square (42 cells total)
     const remainingCells = 42 - (adjustedFirstDay + totalDays);
     for (let day = 1; day <= remainingCells; day++) {
-      const cell = `
-        <div class="calendar-cell muted">
-          <span class="calendar-cell-num">${day}</span>
-        </div>
-      `;
-      container.insertAdjacentHTML("beforeend", cell);
+      const cell = document.createElement("div");
+      cell.className = "calendar-cell muted";
+      const numSpan = document.createElement("span");
+      numSpan.className = "calendar-cell-num";
+      numSpan.textContent = day;
+      cell.appendChild(numSpan);
+      container.appendChild(cell);
     }
   }
 
@@ -301,7 +448,6 @@ window.OrthoKine = window.OrthoKine || {};
   function renderTeam() {
     const grid = document.getElementById("team-members-grid");
     const store = OrthoKine.store;
-    const translations = OrthoKine.translations;
     grid.innerHTML = "";
 
     store.staff.forEach(s => {
@@ -313,32 +459,60 @@ window.OrthoKine = window.OrthoKine || {};
 
       // Specialty translation
       const specialtyTranslation = s.specialty === "Orthophoniste" ? 
-                                   (translations.role_ortho[store.lang] || s.specialty) : 
-                                   (translations.role_kine[store.lang] || s.specialty);
+                                   (OrthoKine.getTranslation('role_ortho') || s.specialty) : 
+                                   (OrthoKine.getTranslation('role_kine') || s.specialty);
 
       const patientsTranslation = store.lang === 'fr' ? 'Patients' : (store.lang === 'es' ? 'Pacientes' : 'Patients');
       const sessionsTranslation = store.lang === 'fr' ? 'Séances' : (store.lang === 'es' ? 'Sesiones' : 'Sessions');
 
-      const card = `
-        <div class="team-card glass-panel">
-          <div class="team-card-avatar">${initials}</div>
-          <h3>${s.name}</h3>
-          <p class="specialty">${specialtyTranslation}</p>
-          <p class="email">${s.email}</p>
-          
-          <div class="team-card-stats">
-            <div class="team-stat">
-              <h5>${patientCount}</h5>
-              <p>${patientsTranslation}</p>
-            </div>
-            <div class="team-stat">
-              <h5>${sessionCount}</h5>
-              <p>${sessionsTranslation}</p>
-            </div>
-          </div>
-        </div>
-      `;
-      grid.insertAdjacentHTML("beforeend", card);
+      const cardDiv = document.createElement("div");
+      cardDiv.className = "team-card glass-panel";
+
+      const avatarDiv = document.createElement("div");
+      avatarDiv.className = "team-card-avatar";
+      avatarDiv.textContent = initials;
+      cardDiv.appendChild(avatarDiv);
+
+      const nameH3 = document.createElement("h3");
+      nameH3.textContent = s.name;
+      cardDiv.appendChild(nameH3);
+
+      const specialtyP = document.createElement("p");
+      specialtyP.className = "specialty";
+      specialtyP.textContent = specialtyTranslation;
+      cardDiv.appendChild(specialtyP);
+
+      const emailP = document.createElement("p");
+      emailP.className = "email";
+      emailP.textContent = s.email;
+      cardDiv.appendChild(emailP);
+
+      const statsDiv = document.createElement("div");
+      statsDiv.className = "team-card-stats";
+
+      const patientStat = document.createElement("div");
+      patientStat.className = "team-stat";
+      const patientH5 = document.createElement("h5");
+      patientH5.textContent = patientCount;
+      const patientP = document.createElement("p");
+      patientP.textContent = patientsTranslation;
+      patientStat.appendChild(patientH5);
+      patientStat.appendChild(patientP);
+
+      const sessionStat = document.createElement("div");
+      sessionStat.className = "team-stat";
+      const sessionH5 = document.createElement("h5");
+      sessionH5.textContent = sessionCount;
+      const sessionP = document.createElement("p");
+      sessionP.textContent = sessionsTranslation;
+      sessionStat.appendChild(sessionH5);
+      sessionStat.appendChild(sessionP);
+
+      statsDiv.appendChild(patientStat);
+      statsDiv.appendChild(sessionStat);
+      cardDiv.appendChild(statsDiv);
+
+      grid.appendChild(cardDiv);
     });
   }
 

@@ -3,6 +3,34 @@
  */
 window.OrthoKine = window.OrthoKine || {};
 
+OrthoKine.escapeHTML = function(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
+OrthoKine.getTranslation = function(key) {
+  if (typeof key !== 'string') return "";
+  if (!Object.prototype.hasOwnProperty.call(OrthoKine.translations, key)) return "";
+  const entry = OrthoKine.translations[key];
+  const lang = OrthoKine.store ? OrthoKine.store.lang : "fr";
+  if (lang === "en") return entry.en || entry.fr || "";
+  if (lang === "es") return entry.es || entry.fr || "";
+  return entry.fr || "";
+};
+
+OrthoKine.getLangValue = function(obj) {
+  if (!obj || typeof obj !== 'object') return "";
+  const lang = OrthoKine.store ? OrthoKine.store.lang : "fr";
+  if (lang === "en") return obj.en || obj.fr || "";
+  if (lang === "es") return obj.es || obj.fr || "";
+  return obj.fr || "";
+};
+
 OrthoKine.translations = {
   login_subtitle: {
     fr: "Portail de Gestion Clinique",
