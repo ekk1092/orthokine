@@ -104,6 +104,34 @@ window.OrthoKine = window.OrthoKine || {};
       OrthoKine.renderCalendar(OrthoKine.currentCalendarMonth, OrthoKine.currentCalendarYear);
       lucide.createIcons();
     });
+
+    // Calendar Navigation Month Buttons
+    document.getElementById("calendar-prev-btn").addEventListener("click", () => {
+      OrthoKine.currentCalendarMonth--;
+      if (OrthoKine.currentCalendarMonth < 0) {
+        OrthoKine.currentCalendarMonth = 11;
+        OrthoKine.currentCalendarYear--;
+      }
+      OrthoKine.renderCalendar(OrthoKine.currentCalendarMonth, OrthoKine.currentCalendarYear);
+      lucide.createIcons();
+    });
+
+    document.getElementById("calendar-next-btn").addEventListener("click", () => {
+      OrthoKine.currentCalendarMonth++;
+      if (OrthoKine.currentCalendarMonth > 11) {
+        OrthoKine.currentCalendarMonth = 0;
+        OrthoKine.currentCalendarYear++;
+      }
+      OrthoKine.renderCalendar(OrthoKine.currentCalendarMonth, OrthoKine.currentCalendarYear);
+      lucide.createIcons();
+    });
+
+    document.getElementById("calendar-today-btn").addEventListener("click", () => {
+      OrthoKine.currentCalendarMonth = 5; // June (0-indexed)
+      OrthoKine.currentCalendarYear = 2026;
+      OrthoKine.renderCalendar(OrthoKine.currentCalendarMonth, OrthoKine.currentCalendarYear);
+      lucide.createIcons();
+    });
   }
 
   // Opening Patient Modal
@@ -199,6 +227,8 @@ window.OrthoKine = window.OrthoKine || {};
   }
 
   function openTeamModal() {
+    const form = document.getElementById("team-form");
+    if (form) form.reset();
     document.getElementById("team-modal").showModal();
     lucide.createIcons();
   }

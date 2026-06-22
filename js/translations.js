@@ -87,6 +87,11 @@ OrthoKine.translations = {
     en: "Settings",
     es: "Ajustes"
   },
+  nav_profile: {
+    fr: "Mon Profil",
+    en: "My Profile",
+    es: "Mi Perfil"
+  },
   theme_light: {
     fr: "Mode Clair",
     en: "Light Mode",

@@ -293,6 +293,8 @@ body {
   height: 100vh;
   overflow: hidden;
   position: relative;
+  min-width: 0;
+  width: 100%;
 }
 
 /* Header */
@@ -327,6 +329,8 @@ body {
   overflow-y: auto;
   display: none;
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .tab-pane.active {
@@ -559,6 +563,9 @@ body {
   border-radius: var(--radius);
   border: 1px solid hsl(var(--border));
   padding: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .calendar-header {
@@ -1007,8 +1014,9 @@ dialog[open] .modal-content {
   
   .calendar-view-controls {
     flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
+    gap: 0.5rem;
+    width: 100% !important;
+    align-items: stretch !important;
   }
   
   .calendar-view-controls select {
@@ -1016,12 +1024,17 @@ dialog[open] .modal-content {
   }
   
   .calendar-nav {
-    width: 100%;
-    justify-content: space-between;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    gap: 0.35rem !important;
+    box-sizing: border-box !important;
   }
   
   .calendar-nav button {
-    flex-grow: 1;
+    flex-grow: 1 !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem !important;
   }
 }
 
@@ -1045,29 +1058,68 @@ dialog[open] .modal-content {
   
   /* Calendar compaction: Replace text event tags with circular dots */
   .calendar-cell {
-    min-height: 60px;
+    min-height: 44px;
     aspect-ratio: 1;
-    padding: 0.25rem;
+    padding: 0.15rem;
+    border-radius: 0.35rem;
+  }
+  
+  .calendar-cell-num {
+    font-size: 0.7rem;
+    text-align: center;
+    width: 100%;
+  }
+  
+  .calendar-day-label {
+    font-size: 0.65rem;
+    padding-bottom: 0.25rem;
   }
   
   .calendar-event-dot {
     font-size: 0 !important;
-    width: 8px !important;
-    height: 8px !important;
+    width: 6px !important;
+    height: 6px !important;
     border-radius: 50% !important;
     padding: 0 !important;
     min-height: auto !important;
     display: inline-block !important;
-    margin: 2px auto 0 auto !important;
+    margin: 1px auto 0 auto !important;
     box-shadow: none !important;
   }
   
   .calendar-cell-events {
     flex-direction: row;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     flex-wrap: wrap;
-    margin-top: 0.25rem;
+    margin-top: 0.15rem;
+  }
+
+  /* Compact tab container for small screens */
+  .tab-pane {
+    padding: 0.5rem 0.25rem;
+  }
+
+  /* Compact calendar widget to fit full columns */
+  .calendar-widget {
+    padding: 0.5rem 0.25rem;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .calendar-grid {
+    gap: 0.15rem;
+  }
+
+  .calendar-nav {
+    gap: 0.25rem !important;
+  }
+
+  .calendar-nav button {
+    padding: 0.4rem 0.5rem !important;
+    font-size: 0.75rem !important;
   }
 }
 
