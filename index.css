@@ -587,6 +587,23 @@ body {
   gap: 0.5rem;
 }
 
+.calendar-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.calendar-days-header > div {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  padding: 0.4rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -642,6 +659,34 @@ body {
   gap: 0.25rem;
   margin-top: 0.25rem;
   overflow: hidden;
+}
+
+/* New v2 class names from ui.js */
+.cell-date {
+  font-weight: 600;
+  font-size: 0.85rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.cell-events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  flex: 1;
+}
+
+.calendar-cell.empty {
+  background: transparent;
+  border-color: transparent;
+  pointer-events: none;
+  cursor: default;
 }
 
 .calendar-event-dot {
