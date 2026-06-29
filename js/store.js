@@ -16,27 +16,48 @@ window.OrthoKine = window.OrthoKine || {};
   // ─── INITIAL USERS ─────────────────────────────────────────────────────────
   const INITIAL_USERS = [
     // Chef de Service
-    { id: 'u-1',  name: 'Dr. Responsable', initials: 'DR', email: 'chef@orthokine.com',           password: 'chef2026',   role: 'chef_service', sessionId: null,    praticienId: null },
+    { id: 'u-1',  name: 'Dr. Responsable',     initials: 'DR', email: 'chef@orthokine.com',           password: 'chef2026',   role: 'chef_service', sessionId: null,     praticienId: null },
     // Chefs de Session
-    { id: 'u-2',  name: 'Marie Koné',      initials: 'MK', email: 'mobilisation@orthokine.com',   password: 'session123', role: 'chef_session', sessionId: 'sess-1', praticienId: null },
-    { id: 'u-3',  name: 'Dr. Awa Diallo',  initials: 'AD', email: 'pediatrie@orthokine.com',      password: 'session123', role: 'chef_session', sessionId: 'sess-2', praticienId: null },
-    { id: 'u-4',  name: 'Paul Mensah',     initials: 'PM', email: 'marche@orthokine.com',         password: 'session123', role: 'chef_session', sessionId: 'sess-3', praticienId: null },
-    { id: 'u-5',  name: 'Fatou Traoré',   initials: 'FT', email: 'vestibulaire@orthokine.com',   password: 'session123', role: 'chef_session', sessionId: 'sess-4', praticienId: null },
-    // Praticiens
-    { id: 'u-6',  name: 'Sophie Laurent',  initials: 'SL', email: 'sophie@orthokine.com',         password: 'kine123',    role: 'praticien',    sessionId: 'sess-1', praticienId: 'pr-1' },
-    { id: 'u-7',  name: 'Lucas Bernard',   initials: 'LB', email: 'lucas@orthokine.com',          password: 'kine123',    role: 'praticien',    sessionId: 'sess-1', praticienId: 'pr-2' },
-    { id: 'u-8',  name: 'Dr. Marc Dubois', initials: 'MD', email: 'marc@orthokine.com',           password: 'kine123',    role: 'praticien',    sessionId: 'sess-2', praticienId: 'pr-3' },
-    { id: 'u-9',  name: 'Isabelle Moreau', initials: 'IM', email: 'isabelle@orthokine.com',       password: 'kine123',    role: 'praticien',    sessionId: 'sess-3', praticienId: 'pr-4' },
-    { id: 'u-10', name: 'Thomas Renard',   initials: 'TR', email: 'thomas@orthokine.com',         password: 'kine123',    role: 'praticien',    sessionId: 'sess-4', praticienId: 'pr-5' },
+    { id: 'u-2',  name: 'Marie Koné',           initials: 'MK', email: 'mobilisation@orthokine.com',   password: 'session123', role: 'chef_session', sessionId: 'sess-1', praticienId: null },
+    { id: 'u-3',  name: 'Dr. Awa Diallo',       initials: 'AD', email: 'pediatrie@orthokine.com',      password: 'session123', role: 'chef_session', sessionId: 'sess-2', praticienId: null },
+    { id: 'u-4',  name: 'Paul Mensah',          initials: 'PM', email: 'marche@orthokine.com',         password: 'session123', role: 'chef_session', sessionId: 'sess-3', praticienId: null },
+    { id: 'u-5',  name: 'Fatou Traoré',        initials: 'FT', email: 'vestibulaire@orthokine.com',   password: 'session123', role: 'chef_session', sessionId: 'sess-4', praticienId: null },
+    // Praticiens — Mobilisation Adulte (sess-1)
+    { id: 'u-6',  name: 'Sophie Laurent',       initials: 'SL', email: 'sophie@orthokine.com',         password: 'kine123',    role: 'praticien',    sessionId: 'sess-1', praticienId: 'pr-1' },
+    { id: 'u-7',  name: 'Lucas Bernard',        initials: 'LB', email: 'lucas@orthokine.com',          password: 'kine123',    role: 'praticien',    sessionId: 'sess-1', praticienId: 'pr-2' },
+    { id: 'u-11', name: 'Dr. Kofi Asante',      initials: 'KA', email: 'kofi@orthokine.com',           password: 'kine123',    role: 'praticien',    sessionId: 'sess-1', praticienId: 'pr-6' },
+    // Praticiens — Pédiatrie (sess-2)
+    { id: 'u-8',  name: 'Dr. Marc Dubois',      initials: 'MD', email: 'marc@orthokine.com',           password: 'kine123',    role: 'praticien',    sessionId: 'sess-2', praticienId: 'pr-3' },
+    { id: 'u-12', name: 'Aminata Coulibaly',    initials: 'AC', email: 'aminata@orthokine.com',        password: 'kine123',    role: 'praticien',    sessionId: 'sess-2', praticienId: 'pr-7' },
+    { id: 'u-13', name: 'Dr. Yves Tossou',      initials: 'YT', email: 'yves@orthokine.com',           password: 'kine123',    role: 'praticien',    sessionId: 'sess-2', praticienId: 'pr-8' },
+    // Praticiens — École de marche (sess-3)
+    { id: 'u-9',  name: 'Isabelle Moreau',      initials: 'IM', email: 'isabelle@orthokine.com',       password: 'kine123',    role: 'praticien',    sessionId: 'sess-3', praticienId: 'pr-4' },
+    { id: 'u-14', name: 'Serge Kouadio',        initials: 'SK', email: 'serge@orthokine.com',          password: 'kine123',    role: 'praticien',    sessionId: 'sess-3', praticienId: 'pr-9' },
+    { id: 'u-15', name: 'Dr. Nadia Bamba',      initials: 'NB', email: 'nadia@orthokine.com',          password: 'kine123',    role: 'praticien',    sessionId: 'sess-3', praticienId: 'pr-10' },
+    // Praticiens — Vestibulaire (sess-4)
+    { id: 'u-10', name: 'Thomas Renard',        initials: 'TR', email: 'thomas@orthokine.com',         password: 'kine123',    role: 'praticien',    sessionId: 'sess-4', praticienId: 'pr-5' },
+    { id: 'u-16', name: 'Chloé Ouédraogo',     initials: 'CO', email: 'chloe@orthokine.com',          password: 'kine123',    role: 'praticien',    sessionId: 'sess-4', praticienId: 'pr-11' },
+    { id: 'u-17', name: 'Dr. Emile Gbagbo',     initials: 'EG', email: 'emile@orthokine.com',          password: 'kine123',    role: 'praticien',    sessionId: 'sess-4', praticienId: 'pr-12' },
   ];
 
   // ─── INITIAL PRATICIENS ────────────────────────────────────────────────────
   const INITIAL_PRATICIENS = [
-    { id: 'pr-1', name: 'Sophie Laurent',  specialty: 'Kinésithérapeute', email: 'sophie@orthokine.com',   sessionId: 'sess-1' },
-    { id: 'pr-2', name: 'Lucas Bernard',   specialty: 'Kinésithérapeute', email: 'lucas@orthokine.com',    sessionId: 'sess-1' },
-    { id: 'pr-3', name: 'Dr. Marc Dubois', specialty: 'Pédiatre',          email: 'marc@orthokine.com',     sessionId: 'sess-2' },
-    { id: 'pr-4', name: 'Isabelle Moreau', specialty: 'Ergothérapeute',   email: 'isabelle@orthokine.com', sessionId: 'sess-3' },
-    { id: 'pr-5', name: 'Thomas Renard',   specialty: 'Kinésithérapeute', email: 'thomas@orthokine.com',   sessionId: 'sess-4' },
+    // Mobilisation Adulte
+    { id: 'pr-1',  name: 'Sophie Laurent',    specialty: 'Kinésithérapeute', email: 'sophie@orthokine.com',   sessionId: 'sess-1' },
+    { id: 'pr-2',  name: 'Lucas Bernard',     specialty: 'Kinésithérapeute', email: 'lucas@orthokine.com',    sessionId: 'sess-1' },
+    { id: 'pr-6',  name: 'Dr. Kofi Asante',   specialty: 'Orthopédiste',     email: 'kofi@orthokine.com',     sessionId: 'sess-1' },
+    // Pédiatrie
+    { id: 'pr-3',  name: 'Dr. Marc Dubois',   specialty: 'Pédiatre',          email: 'marc@orthokine.com',     sessionId: 'sess-2' },
+    { id: 'pr-7',  name: 'Aminata Coulibaly', specialty: 'Pédiatre',          email: 'aminata@orthokine.com',  sessionId: 'sess-2' },
+    { id: 'pr-8',  name: 'Dr. Yves Tossou',   specialty: 'Psychologue',       email: 'yves@orthokine.com',     sessionId: 'sess-2' },
+    // École de marche
+    { id: 'pr-4',  name: 'Isabelle Moreau',   specialty: 'Ergothérapeute',   email: 'isabelle@orthokine.com', sessionId: 'sess-3' },
+    { id: 'pr-9',  name: 'Serge Kouadio',     specialty: 'Kinésithérapeute', email: 'serge@orthokine.com',    sessionId: 'sess-3' },
+    { id: 'pr-10', name: 'Dr. Nadia Bamba',   specialty: 'Orthopédiste',     email: 'nadia@orthokine.com',    sessionId: 'sess-3' },
+    // Vestibulaire
+    { id: 'pr-5',  name: 'Thomas Renard',     specialty: 'Kinésithérapeute', email: 'thomas@orthokine.com',   sessionId: 'sess-4' },
+    { id: 'pr-11', name: 'Chloé Ouédraogo',  specialty: 'Ergothérapeute',   email: 'chloe@orthokine.com',    sessionId: 'sess-4' },
+    { id: 'pr-12', name: 'Dr. Emile Gbagbo',  specialty: 'Psychologue',       email: 'emile@orthokine.com',    sessionId: 'sess-4' },
   ];
 
   // ─── INITIAL PATIENTS (enriched v2) ───────────────────────────────────────
@@ -122,6 +143,13 @@ window.OrthoKine = window.OrthoKine || {};
       ['ok_staff', 'ok_logged_in', 'ok_patients', 'ok_appointments'].forEach(k => {
         localStorage.removeItem(k);
       });
+      // Bust praticiens/users cache when seed data version is upgraded
+      const DATA_VERSION = 'v2.1';
+      if (localStorage.getItem('ok_data_version') !== DATA_VERSION) {
+        localStorage.removeItem('ok_users');
+        localStorage.removeItem('ok_praticiens');
+        localStorage.setItem('ok_data_version', DATA_VERSION);
+      }
     }
 
     save() {
@@ -218,7 +246,7 @@ window.OrthoKine = window.OrthoKine || {};
       if (!u) return [];
       if (u.role === 'chef_service') return this.patients;
       if (u.role === 'chef_session') return this.patients.filter(p => p.sessionId === u.sessionId);
-      if (u.role === 'praticien')    return this.patients.filter(p => p.sessionId === u.sessionId);
+      if (u.role === 'praticien')    return this.patients.filter(p => p.praticienId === u.praticienId);
       return [];
     }
     getVisibleAppointments() {

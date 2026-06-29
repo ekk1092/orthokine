@@ -739,6 +739,20 @@
     </div>
   </dialog>
 
+  <!-- ── 7. Day Detail Modal (Calendar) ───────────────────────────── -->
+  <dialog class="modal-dialog" id="day-detail-modal">
+    <div class="modal-content modal-content-wide">
+      <div class="modal-header">
+        <h3 id="day-detail-title">Détail du jour</h3>
+        <button class="btn-close" onclick="document.getElementById('day-detail-modal').close()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="day-detail-body" style="max-height:65vh;overflow-y:auto;">
+      </div>
+    </div>
+  </dialog>
+
   <!-- ── JS Modules ────────────────────────────────────────────── -->
   <script src="js/translations.js"></script>
   <script src="js/store.js"></script>

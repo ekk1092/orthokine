@@ -245,6 +245,22 @@ window.OrthoKine = window.OrthoKine || {};
         sessOverviewEl.style.display = 'none';
       }
     }
+
+    // Chef de Session: make stat cards clickable to their pages
+    if (user.role === 'chef_session') {
+      [
+        { id: 'stat-sessions-today',    tab: 'appointments' },
+        { id: 'stat-total-patients',    tab: 'patients' },
+        { id: 'stat-active-therapists', tab: 'mon_equipe' },
+        { id: 'stat-pending-hours',     tab: 'appointments' },
+      ].forEach(({ id, tab }) => {
+        const card = document.getElementById(id)?.closest('.stat-card');
+        if (card) {
+          card.style.cursor = 'pointer';
+          card.onclick = () => OrthoKine.navigateTo(tab);
+        }
+      });
+    }
   }
 
   function _statusActions(apt) {
@@ -488,7 +504,7 @@ window.OrthoKine = window.OrthoKine || {};
       const isToday  = dateStr === todayStr;
 
       html += `
-      <div class="calendar-cell ${isToday ? 'today' : ''}" onclick="OrthoKine.openAppointmentForDate('${dateStr}')">
+      <div class="calendar-cell ${isToday ? 'today' : ''}" onclick="OrthoKine.openDayDetail('${dateStr}')">
         <div class="cell-date ${isToday ? 'today-label' : ''}">${d}</div>
         <div class="cell-events">
           ${dayApts.slice(0, 3).map(a => {
@@ -504,6 +520,69 @@ window.OrthoKine = window.OrthoKine || {};
     }
 
     grid.innerHTML = html;
+  }
+
+  // ─── DAY DETAIL MODAL ─────────────────────────────────────────────────────
+  function openDayDetail(dateStr) {
+    const store    = OrthoKine.store;
+    const allApts  = store.getVisibleAppointments().filter(a => a.date === dateStr);
+    const modal    = document.getElementById('day-detail-modal');
+    const titleEl  = document.getElementById('day-detail-title');
+    const bodyEl   = document.getElementById('day-detail-body');
+    if (!modal) return;
+
+    const dateLabel = getLocalizedDateStr(dateStr);
+    if (titleEl) titleEl.textContent = dateLabel;
+
+    if (bodyEl) {
+      if (allApts.length === 0) {
+        bodyEl.innerHTML = `
+          <div style="text-align:center;padding:2rem;color:hsl(var(--muted-foreground));">
+            <i data-lucide="calendar-x" style="width:40px;height:40px;margin-bottom:1rem;"></i>
+            <p>Aucun rendez-vous ce jour.</p>
+            <button class="btn btn-primary" style="margin-top:1rem;" onclick="document.getElementById('day-detail-modal').close();OrthoKine.openAppointmentForDate('${dateStr}')">
+              <i data-lucide="calendar-plus"></i> Planifier un RDV
+            </button>
+          </div>`;
+      } else {
+        const sorted = [...allApts].sort((a, b) => a.time.localeCompare(b.time));
+        bodyEl.innerHTML = `
+          <div class="day-detail-list">
+            ${sorted.map(a => {
+              const sess = getSessionDef(a.sessionId);
+              return `
+              <div class="day-detail-item" style="border-left: 3px solid ${sess.color};">
+                <div class="day-detail-time">${a.time}</div>
+                <div class="day-detail-info">
+                  <strong>${patientName(a.patientId)}</strong>
+                  <span class="text-muted small">${a.type}</span>
+                  <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.2rem;flex-wrap:wrap;">
+                    <span class="session-badge-sm" style="background:${sess.color}20;color:${sess.color};">${sess.name}</span>
+                    <span class="text-muted small">${praticienName(a.praticienId)}</span>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.3rem;align-items:flex-end;">
+                  ${statusBadge(a.status)}
+                  <div style="display:flex;gap:0.3rem;">
+                    ${_statusActions(a)}
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('day-detail-modal').close();OrthoKine.openAppointmentModal('${a.id}')">
+                      <i data-lucide="edit-3"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div style="text-align:right;margin-top:1rem;">
+            <button class="btn btn-primary" onclick="document.getElementById('day-detail-modal').close();OrthoKine.openAppointmentForDate('${dateStr}')">
+              <i data-lucide="calendar-plus"></i> Ajouter un RDV
+            </button>
+          </div>`;
+      }
+    }
+
+    modal.showModal();
+    lucide.createIcons();
   }
 
   // ─── 6. APPOINTMENTS LIST (for Mon Équipe / Mes Séances) ──────────────────
@@ -604,8 +683,24 @@ window.OrthoKine = window.OrthoKine || {};
     renderAppointmentsList();
     renderSessionsTab();
     renderMonEquipe();
+    _applyRoleVisibility();
     OrthoKine.applyTranslations();
     lucide.createIcons();
+  }
+
+  // Hide/show UI elements based on role
+  function _applyRoleVisibility() {
+    const user = OrthoKine.store.currentUser;
+    if (!user) return;
+    // Only chef_session can add/see patients
+    const canAddPatient = user.role === 'chef_session';
+    ['add-patient-trigger', 'dash-quick-patient-btn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = canAddPatient ? '' : 'none';
+    });
+    // Only praticien and chef_session can schedule RDV from header
+    const globalRdvBtn = document.getElementById('global-new-rdv-btn');
+    if (globalRdvBtn) globalRdvBtn.style.display = (user.role !== 'chef_service') ? '' : 'none';
   }
 
   // ─── EXPORTS ───────────────────────────────────────────────────────────────
@@ -620,4 +715,5 @@ window.OrthoKine = window.OrthoKine || {};
   OrthoKine.changeAptStatus       = changeAptStatus;
   OrthoKine.deleteAptConfirm      = deleteAptConfirm;
   OrthoKine.confirmRemovePraticien= confirmRemovePraticien;
+  OrthoKine.openDayDetail         = openDayDetail;
 })();
