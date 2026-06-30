@@ -98,9 +98,10 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Mobile Toggle Hamburger button hidden by default on desktop */
+/* Mobile Toggle Hamburger button: hidden on desktop, shown on mobile */
+/* !important needed because .btn (defined later) has same specificity */
 .mobile-menu-toggle {
-  display: none;
+  display: none !important;
   background: hsl(var(--secondary));
   border: none;
   color: hsl(var(--secondary-foreground));
@@ -942,9 +943,9 @@ dialog[open] .modal-content {
 
 /* ── Mobile (≤ 768px) ──────────────────────────────── */
 @media (max-width: 768px) {
-  /* Show the hamburger toggle */
+  /* Show the hamburger toggle on mobile */
   .mobile-menu-toggle {
-    display: inline-flex;
+    display: inline-flex !important;
   }
 
   /* Sidebar becomes a slide-in overlay */
