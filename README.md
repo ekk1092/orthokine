@@ -1,6 +1,6 @@
 # OrthoKine Practice Portal 🏥✨
 
-An elegant, premium, lightweight Single Page Application (SPA) custom-tailored for a speech therapy (**orthophonie**) and physiotherapy (**kinésithérapie**) practice. 
+An elegant, premium, lightweight Single Page Application (SPA) custom-tailored for a speech therapy (**orthophonie**) and physiotherapy (**kinésithérapie**) practice.
 
 This portal enables clinical directors to manage their team of therapists, register patient profiles, and coordinate appointment schedules (**RDVs**) seamlessly — with zero server dependency, zero installation, and 100% offline data resilience via `localStorage`.
 
@@ -10,7 +10,7 @@ This portal enables clinical directors to manage their team of therapists, regis
 
 The app is deployed on Vercel:
 
-> **[https://orthokine.vercel.app](https://eager-mendeleev.vercel.app)**
+> **[https://orthokine.vercel.app](https://orthokine.vercel.app/)**
 
 ### Demo Credentials
 
