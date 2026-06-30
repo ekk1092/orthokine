@@ -4,10 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrthoKine Portal | Gestion Clinique & Équipe</title>
-  <meta name="description" content="Plateforme de gestion pour cabinets d'orthophonie et de kinésithérapie. Gérez vos patients, employés et rendez-vous facilement.">
-  <link rel="stylesheet" href="index.css">
-  <!-- Lucide Icons CDN for sleek vector iconography -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <meta name="description" content="Plateforme de gestion multi-rôles pour le service de kinésithérapie. Chef de Service, Chefs de Session et Praticiens.">
+
+  <!-- SEO: Private clinical portal — block search engine indexing -->
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:title"       content="OrthoKine Portal | Gestion Clinique">
+  <meta property="og:description" content="Portail de gestion multi-rôles pour le service de kinésithérapie.">
+  <meta property="og:locale"      content="fr_FR">
+
+  <!-- Assets: ?v=2.0 for cache busting on each deploy -->
+  <link rel="stylesheet" href="index.css?v=2.0">
+  <link rel="icon" href="data:,">
+
+  <!-- Lucide Icons: self-hosted (no CDN dependency) -->
+  <script src="js/vendor/lucide.min.js?v=2.0"></script>
 </head>
 <body>
 
@@ -543,14 +556,28 @@
     </div>
   </dialog>
 
-  <!-- Namespace Modular Scripts -->
-  <script src="js/translations.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/theme.js"></script>
-  <script src="js/router.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/forms.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/app.js"></script>
+  <!-- ── 7. Day Detail Modal (Calendar) ───────────────────────────── -->
+  <dialog class="modal-dialog" id="day-detail-modal">
+    <div class="modal-content modal-content-wide">
+      <div class="modal-header">
+        <h3 id="day-detail-title">Détail du jour</h3>
+        <button class="btn-close" onclick="document.getElementById('day-detail-modal').close()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="day-detail-body" style="max-height:65vh;overflow-y:auto;">
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ── JS Modules ────────────────────────────────────────────── -->
+  <script src="js/translations.js?v=2.0"></script>
+  <script src="js/store.js?v=2.0"></script>
+  <script src="js/theme.js?v=2.0"></script>
+  <script src="js/router.js?v=2.0"></script>
+  <script src="js/auth.js?v=2.0"></script>
+  <script src="js/ui.js?v=2.0"></script>
+  <script src="js/forms.js?v=2.0"></script>
+  <script src="js/app.js?v=2.0"></script>
 </body>
 </html>
