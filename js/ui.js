@@ -509,7 +509,7 @@ window.OrthoKine = window.OrthoKine || {};
         <div class="cell-events">
           ${dayApts.slice(0, 3).map(a => {
             const sess = getSessionDef(a.sessionId);
-            return `<div class="cal-event" style="background:${sess.color}20;border-left:2px solid ${sess.color};"
+            return `<div class="cal-event" style="--event-color:${sess.color};background:${sess.color}20;border-left:2px solid ${sess.color};"
                      onclick="event.stopPropagation();OrthoKine.openAppointmentModal('${a.id}')">
                       <span>${a.time}</span> ${patientName(a.patientId)}
                     </div>`;
