@@ -1,104 +1,110 @@
 /**
- * OrthoKine Namespace - Router & Navigation Module (v2.0)
+ * OrthoKine Namespace - Router & Navigation Module
  */
 window.OrthoKine = window.OrthoKine || {};
 
-(function () {
-
-  const TAB_TITLES = {
-    dashboard:   { fr: 'Tableau de bord',      en: 'Dashboard',         es: 'Panel Principal' },
-    sessions:    { fr: 'Sessions',              en: 'Sessions',          es: 'Sesiones' },
-    mon_equipe:  { fr: 'Mon Équipe',            en: 'My Team',           es: 'Mi Equipo' },
-    patients:    { fr: 'Patients',              en: 'Patients',          es: 'Pacientes' },
-    appointments:{ fr: 'Rendez-vous',           en: 'Appointments',      es: 'Citas' },
-    team:        { fr: 'Praticiens',            en: 'Practitioners',     es: 'Practicantes' },
-    settings:    { fr: 'Paramètres',            en: 'Settings',          es: 'Configuración' },
-  };
-
-  OrthoKine.currentCalendarMonth = new Date().getMonth();
-  OrthoKine.currentCalendarYear  = new Date().getFullYear();
-
+(function() {
   function initRouter() {
-    // Mobile menu toggle
-    const toggleBtn  = document.getElementById('mobile-menu-toggle');
-    const sidebar    = document.getElementById('app-sidebar');
-    const backdrop   = document.getElementById('sidebar-backdrop');
-    const brandLink  = document.getElementById('brand-home-link');
+    const links = document.querySelectorAll(".nav-link");
+    const panes = document.querySelectorAll(".tab-pane");
+    const title = document.getElementById("current-tab-title");
 
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        backdrop.classList.toggle('active');
-      });
-    }
-    if (backdrop) {
-      backdrop.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        backdrop.classList.remove('active');
-      });
-    }
-    if (brandLink) {
-      brandLink.addEventListener('click', () => navigateTo('dashboard'));
-    }
+    links.forEach(link => {
+      link.addEventListener("click", () => {
+        const targetTab = link.getAttribute("data-tab");
+        
+        links.forEach(l => l.classList.remove("active"));
+        panes.forEach(p => p.classList.remove("active"));
 
-    // Nav link clicks (event delegation)
-    document.querySelector('.nav-links').addEventListener('click', (e) => {
-      const link = e.target.closest('.nav-link[data-tab]');
-      if (!link) return;
-      e.preventDefault();
-      navigateTo(link.dataset.tab);
-      // Close mobile sidebar
-      sidebar.classList.remove('open');
-      backdrop.classList.remove('active');
+        link.classList.add("active");
+        const targetPane = document.getElementById(targetTab);
+        if (targetPane) targetPane.classList.add("active");
+
+        // Update header title beautifully using dynamic localization keys
+        const translationKey = link.querySelector("span").getAttribute("data-i18n");
+        title.setAttribute("data-i18n", translationKey);
+        title.textContent = OrthoKine.getTranslation(translationKey) || link.querySelector("span").textContent;
+        
+        // Render components dynamically based on target view
+        OrthoKine.renderAll();
+      });
     });
 
-    // Set initial active tab
-    navigateTo('dashboard');
+    // Topleft Brand Logo click action: Always go back to Home (Dashboard)
+    document.getElementById("brand-home-link").addEventListener("click", () => {
+      document.querySelector('[data-tab="dashboard"]').click();
+    });
+
+    // User Profile at bottom click action: Always go to Profile tab and set active
+    document.getElementById("user-profile-trigger").addEventListener("click", () => {
+      // Hide active tabs
+      links.forEach(l => l.classList.remove("active"));
+      panes.forEach(p => p.classList.remove("active"));
+
+      // Activate Profile Tab
+      document.getElementById("profile").classList.add("active");
+      
+      // Localize header title dynamically
+      title.setAttribute("data-i18n", "nav_profile");
+      title.textContent = OrthoKine.getTranslation("nav_profile") || "Mon Profil";
+
+      OrthoKine.renderAll();
+    });
+
+    // Shortcut dashboard actions
+    document.getElementById("dash-quick-patient-btn").addEventListener("click", () => {
+      OrthoKine.openPatientModal();
+    });
+    
+    document.getElementById("dash-view-calendar-btn").addEventListener("click", () => {
+      document.querySelector('[data-tab="appointments"]').click();
+    });
+
+    document.getElementById("dash-view-team-btn").addEventListener("click", () => {
+      document.querySelector('[data-tab="team"]').click();
+    });
   }
 
-  function navigateTo(tab) {
-    // Deactivate all nav links & panes
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  // Hamburger drawer controls
+  function initMobileControls() {
+    const toggleBtn = document.getElementById("mobile-menu-toggle");
+    const sidebar = document.getElementById("app-sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
 
-    // Activate target link
-    const targetLink = document.querySelector(`.nav-link[data-tab="${tab}"]`);
-    if (targetLink) targetLink.classList.add('active');
+    const closeSidebar = () => {
+      sidebar.classList.remove("open");
+      backdrop.classList.remove("active");
+    };
 
-    // Activate target pane
-    const targetPane = document.getElementById(tab);
-    if (targetPane) targetPane.classList.add('active');
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+      backdrop.classList.toggle("active");
+    });
 
-    // Update page title
-    const titleEl = document.getElementById('current-tab-title');
-    if (titleEl) {
-      const lang   = OrthoKine.store.lang || 'fr';
-      const titles = TAB_TITLES[tab];
-      titleEl.textContent = titles ? (titles[lang] || titles.fr) : tab;
-    }
+    backdrop.addEventListener("click", closeSidebar);
 
-    // Live clock badge
-    _updateLiveClock();
+    // Close mobile sidebar on any navigation link selection
+    document.querySelectorAll(".nav-link").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 992) {
+          closeSidebar();
+        }
+      });
+    });
 
-    // Trigger tab-specific render
-    if (tab === 'appointments') {
-      OrthoKine.renderCalendar(OrthoKine.currentCalendarMonth, OrthoKine.currentCalendarYear);
-      lucide.createIcons();
-    } else if (tab === 'dashboard') {
-      OrthoKine.renderDashboard();
-      lucide.createIcons();
-    }
+    document.getElementById("brand-home-link").addEventListener("click", () => {
+      if (window.innerWidth <= 992) {
+        closeSidebar();
+      }
+    });
+
+    document.getElementById("user-profile-trigger").addEventListener("click", () => {
+      if (window.innerWidth <= 992) {
+        closeSidebar();
+      }
+    });
   }
 
-  function _updateLiveClock() {
-    const badge = document.getElementById('live-time-badge');
-    if (!badge) return;
-    const now    = new Date();
-    const days   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-    badge.textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-  }
-
-  OrthoKine.initRouter  = initRouter;
-  OrthoKine.navigateTo  = navigateTo;
+  OrthoKine.initRouter = initRouter;
+  OrthoKine.initMobileControls = initMobileControls;
 })();

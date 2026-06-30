@@ -1,140 +1,66 @@
 /**
- * OrthoKine Namespace - Authentication & Session Module (v2.0)
+ * OrthoKine Namespace - Authentication & Session Module
  */
 window.OrthoKine = window.OrthoKine || {};
 
-(function () {
-  
-  const ROLE_LABELS = {
-    chef_service: 'Chef de Service',
-    chef_session: 'Chef de Session',
-    praticien:    'Praticien',
-  };
-
-  const ROLE_ICONS = {
-    chef_service: 'shield-check',
-    chef_session: 'award',
-    praticien:    'stethoscope',
-  };
-
+(function() {
   function initAuthentication() {
-    const loginForm   = document.getElementById('login-form');
-    const loginScreen = document.getElementById('login-screen');
-    const mainApp     = document.getElementById('main-app');
-    const errorMsg    = document.getElementById('login-error-msg');
-    const store       = OrthoKine.store;
-
-    // Auto-restore session
-    if (store.currentUser) {
-      _showApp(loginScreen, mainApp);
-    } else {
-      loginScreen.style.display = 'flex';
-      mainApp.style.display     = 'none';
-    }
-
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email    = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      const user     = store.login(email, password);
-
-      if (user) {
-        errorMsg.style.display = 'none';
-        loginScreen.style.opacity    = '0';
-        loginScreen.style.transition = 'opacity 0.4s ease';
-
-        setTimeout(() => {
-          loginScreen.style.display = 'none';
-          loginScreen.style.opacity = '1';
-          _showApp(loginScreen, mainApp);
-          OrthoKine.applyRole();
-          OrthoKine.renderAll();
-        }, 400);
-      } else {
-        errorMsg.style.display = 'block';
-        errorMsg.classList.add('shake');
-        setTimeout(() => errorMsg.classList.remove('shake'), 500);
-      }
-    });
-
-    // Logout
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      store.logout();
-      mainApp.style.display     = 'none';
-      loginScreen.style.display = 'flex';
-      document.getElementById('login-password').value = '';
-      // Reset to dashboard tab visually
-      const dashLink = document.querySelector('[data-tab="dashboard"]');
-      if (dashLink) dashLink.click();
-    });
-  }
-
-  function _showApp(loginScreen, mainApp) {
-    loginScreen.style.display = 'none';
-    mainApp.style.display     = 'flex';
-    OrthoKine.applyRole();
-    OrthoKine.renderAll();
-  }
-
-  /** Apply role-based UI visibility */
-  function applyRole() {
-    const user  = OrthoKine.store.currentUser;
-    if (!user) return;
-
-    const role  = user.role;
+    const loginForm = document.getElementById("login-form");
+    const loginScreen = document.getElementById("login-screen");
+    const mainApp = document.getElementById("main-app");
+    const errorMsg = document.getElementById("login-error-msg");
     const store = OrthoKine.store;
 
-    // Update sidebar user info
-    const avatarEl = document.getElementById('user-avatar-initials');
-    const nameEl   = document.getElementById('user-display-name');
-    const roleEl   = document.getElementById('user-role-label');
-    const badgeEl  = document.getElementById('user-role-badge');
-
-    if (avatarEl) avatarEl.textContent = user.initials || user.name.slice(0, 2).toUpperCase();
-    if (nameEl)   nameEl.textContent   = user.name;
-    if (roleEl)   roleEl.textContent   = ROLE_LABELS[role] || role;
-
-    if (badgeEl) {
-      badgeEl.textContent  = ROLE_LABELS[role] || role;
-      badgeEl.className    = 'role-badge role-' + role;
+    if (store.loggedIn) {
+      loginScreen.style.display = "none";
+      mainApp.style.display = "flex";
+    } else {
+      loginScreen.style.display = "flex";
+      mainApp.style.display = "none";
     }
 
-    // Show session badge for chef_session / praticien
-    const sessionBadgeWrap = document.getElementById('session-badge-header');
-    if (sessionBadgeWrap) {
-      if (role !== 'chef_service') {
-        const sess = store.getSessionForUser(user.id);
-        sessionBadgeWrap.style.display = 'inline-flex';
-        const sessNameEl = document.getElementById('session-badge-name');
-        if (sessNameEl && sess) sessNameEl.textContent = sess.name;
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      // Hardcoded clinical credentials
+      if (email === "admin@orthokine.com" && password === "admin") {
+        store.loggedIn = true;
+        store.save();
+        errorMsg.style.display = "none";
+        
+        // Beautiful fade transition out
+        loginScreen.style.opacity = "0";
+        loginScreen.style.transition = "opacity 0.4s ease";
+        
+        setTimeout(() => {
+          loginScreen.style.display = "none";
+          mainApp.style.display = "flex";
+          loginScreen.style.opacity = "1"; // Restore for later
+          OrthoKine.renderAll();
+        }, 400);
+
       } else {
-        sessionBadgeWrap.style.display = 'none';
+        errorMsg.style.display = "block";
       }
-    }
-
-    // Toggle nav links visibility
-    const navLinks = document.querySelectorAll('.nav-link[data-roles]');
-    navLinks.forEach(link => {
-      const allowed = link.dataset.roles.split(',').map(r => r.trim());
-      link.style.display = allowed.includes(role) ? 'flex' : 'none';
     });
 
-    // Toggle action buttons based on role
-    _applyActionVisibility(role);
-  }
-
-  function _applyActionVisibility(role) {
-    // "Planifier un RDV" global button: chef_session & praticien only (not chef_service)
-    const rdvBtn = document.getElementById('global-new-rdv-btn');
-    if (rdvBtn) rdvBtn.style.display = (role === 'chef_service') ? 'none' : 'flex';
-
-    // "Nouveau Premier RDV" button: chef_session only
-    const firstRdvBtn = document.getElementById('global-new-first-rdv-btn');
-    if (firstRdvBtn) firstRdvBtn.style.display = (role === 'chef_session') ? 'flex' : 'none';
+    // Logout button trigger
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      store.loggedIn = false;
+      store.save();
+      
+      mainApp.style.display = "none";
+      loginScreen.style.display = "flex";
+      
+      // Clear login passwords
+      document.getElementById("login-password").value = "";
+      
+      // Auto return to dashboard tab
+      document.querySelector('[data-tab="dashboard"]').click();
+    });
   }
 
   OrthoKine.initAuthentication = initAuthentication;
-  OrthoKine.applyRole          = applyRole;
-  OrthoKine.ROLE_LABELS        = ROLE_LABELS;
-  OrthoKine.ROLE_ICONS         = ROLE_ICONS;
 })();
