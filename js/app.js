@@ -1,87 +1,71 @@
 /**
- * OrthoKine Namespace - Main Orchestrator & Bootstrapper Module
+ * OrthoKine Namespace - Main Orchestrator & Bootstrapper Module (v2.0)
  */
 window.OrthoKine = window.OrthoKine || {};
 
-(function() {
-  // DOMContentLoaded orchestrator
-  document.addEventListener("DOMContentLoaded", () => {
-    // 1. Initialize Active theme
+(function () {
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Theme
     OrthoKine.initTheme();
-    
-    // 2. Initialize Routing and navigation controllers
+
+    // 2. Router / navigation
     OrthoKine.initRouter();
-    OrthoKine.initMobileControls();
-    
-    // 3. Initialize Forms and modals selectors
+
+    // 3. Forms & modals
     OrthoKine.initForms();
-    
-    // 4. Initialize Clinical session authentication
+
+    // 4. Authentication (multi-role)
     OrthoKine.initAuthentication();
-    
-    // 5. Initialize Localization translations
+
+    // 5. Localization
     initLocalSettings();
-    
-    // 6. Draw all UI stats and views
-    OrthoKine.renderAll();
+
+    // 6. Initial render (if already logged in, applyRole called inside auth)
+    if (OrthoKine.store.currentUser) {
+      OrthoKine.renderAll();
+    }
   });
 
-  // Settings screen language saving action
   function initLocalSettings() {
-    const langSelector = document.getElementById("language-selector");
-    const saveBtn = document.getElementById("save-settings-btn");
-    const store = OrthoKine.store;
+    const langSelector = document.getElementById('language-selector');
+    const saveBtn      = document.getElementById('save-settings-btn');
+    const store        = OrthoKine.store;
 
-    saveBtn.addEventListener("click", () => {
+    if (langSelector) langSelector.value = store.lang;
+
+    saveBtn?.addEventListener('click', () => {
       store.lang = langSelector.value;
       store.save();
-      translateLocalDOM();
+      applyTranslations();
       OrthoKine.renderAll();
-      
-      const successMessages = {
-        fr: "Paramètres enregistrés avec succès !",
-        en: "Settings saved successfully!",
-        es: "¡Ajustes guardados con éxito!"
-      };
-      alert(OrthoKine.getLangValue(successMessages));
+      alert({ fr: 'Paramètres enregistrés !', en: 'Settings saved!', es: '¡Ajustes guardados!' }[store.lang] || 'Saved!');
     });
 
-    translateLocalDOM();
+    applyTranslations();
   }
 
-  function translateLocalDOM() {
-    const currentLang = OrthoKine.store.lang;
-    document.documentElement.setAttribute("lang", currentLang);
+  function applyTranslations() {
+    const lang = OrthoKine.store.lang;
+    document.documentElement.setAttribute('lang', lang);
 
-    // Translate [data-i18n] text elements
-    document.querySelectorAll("[data-i18n]").forEach(elem => {
-      const key = elem.getAttribute("data-i18n");
-      const translatedValue = OrthoKine.getTranslation(key);
-      if (translatedValue) {
-        const icon = elem.querySelector("i");
-        if (icon) {
-          const textSpan = elem.querySelector("span");
-          if (textSpan) {
-            textSpan.textContent = translatedValue;
-          }
-        } else {
-          elem.textContent = translatedValue;
-        }
-      }
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const val = OrthoKine.getTranslation(key);
+      if (!val) return;
+      const textSpan = el.querySelector('span');
+      if (textSpan) { textSpan.textContent = val; }
+      else          { el.textContent = val; }
     });
 
-    // Translate input placeholders
-    document.querySelectorAll("[data-i18n-placeholder]").forEach(elem => {
-      const key = elem.getAttribute("data-i18n-placeholder");
-      const translatedValue = OrthoKine.getTranslation(key);
-      if (translatedValue) {
-        elem.setAttribute("placeholder", translatedValue);
-      }
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      const val = OrthoKine.getTranslation(key);
+      if (val) el.setAttribute('placeholder', val);
     });
 
-    // Update translations theme tags
-    OrthoKine.updateThemeUI(localStorage.getItem("ok_theme") || "light");
+    OrthoKine.updateThemeUI(localStorage.getItem('ok_theme') || 'light');
   }
 
-  OrthoKine.translateLocalDOM = translateLocalDOM;
+  OrthoKine.applyTranslations = applyTranslations;
+  OrthoKine.translateLocalDOM  = applyTranslations; // backward compat
 })();
