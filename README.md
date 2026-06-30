@@ -10,15 +10,15 @@ This portal enables clinical directors to manage their team of therapists, regis
 
 The app is deployed on Vercel:
 
-> **[https://eager-mendeleev.vercel.app](https://eager-mendeleev.vercel.app)**
+> **[https://orthokine.vercel.app](https://eager-mendeleev.vercel.app)**
 
 ### Demo Credentials
 
-| Role | Email | Password |
-|------|-------|----------|
-| Chef de Service | chef@orthokine.com | chef2026 |
+| Role            | Email                   | Password   |
+| --------------- | ----------------------- | ---------- |
+| Chef de Service | chef@orthokine.com      | chef2026   |
 | Chef de Session | pediatrie@orthokine.com | session123 |
-| Praticien | sophie@orthokine.com | kine123 |
+| Praticien       | sophie@orthokine.com    | kine123    |
 
 ---
 
@@ -67,12 +67,12 @@ Or connect the GitHub repo via the [Vercel Dashboard](https://vercel.com/new) fo
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Structure | HTML5 Semantic (`<dialog>`, semantic grids) |
-| Styling | Pure CSS3 (custom properties, `@media`, glassmorphism) |
-| Logic | Vanilla JS — modular IIFE namespacing, `localStorage` CRUD |
-| Icons | [Lucide](https://lucide.dev/) — self-hosted (`js/vendor/lucide.min.js`) |
+| Layer     | Technology                                                                |
+| --------- | ------------------------------------------------------------------------- |
+| Structure | HTML5 Semantic (`<dialog>`, semantic grids)                             |
+| Styling   | Pure CSS3 (custom properties,`@media`, glassmorphism)                   |
+| Logic     | Vanilla JS — modular IIFE namespacing,`localStorage` CRUD              |
+| Icons     | [Lucide](https://lucide.dev/) — self-hosted (`js/vendor/lucide.min.js`) |
 
 ---
 
