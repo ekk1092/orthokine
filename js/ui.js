@@ -1,719 +1,554 @@
 /**
- * OrthoKine Namespace - UI Render Engine Module (v2.0 — Multi-Rôles)
+ * OrthoKine Namespace - UI Render Engine Module
  */
 window.OrthoKine = window.OrthoKine || {};
 
-(function () {
-
-  // ─── HELPERS ───────────────────────────────────────────────────────────────
+(function() {
+  // Translate dynamic dates based on active language
   function getLocalizedDateStr(dateStr) {
-    const date = new Date(dateStr + 'T00:00:00');
+    const date = new Date(dateStr);
     const lang = OrthoKine.store.lang;
-    const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'fr-FR';
-    const val = date.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const locale = (lang === 'en') ? 'en-US' : (lang === 'es' ? 'es-ES' : 'fr-FR');
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    
+    // Capitalize first letter of string
+    const val = date.toLocaleDateString(locale, options);
     return val.charAt(0).toUpperCase() + val.slice(1);
   }
 
-  function getSessionDef(sessionId) {
-    return (OrthoKine.SESSIONS_DEF || []).find(s => s.id === sessionId) || { color: '#888', name: 'Session', bgClass: '' };
-  }
-
-  function statusBadge(status) {
-    const map = {
-      'Planifiée':  { cls: 'badge-planned',    icon: 'clock' },
-      'En cours':   { cls: 'badge-inprogress', icon: 'activity' },
-      'Terminée':   { cls: 'badge-done',       icon: 'check-circle' },
-      'Actif':      { cls: 'badge-success',    icon: 'check' },
-      'En attente': { cls: 'badge-warning',    icon: 'clock' },
-      'Inactif':    { cls: 'badge-muted',      icon: 'x' },
-    };
-    const info = map[status] || { cls: 'badge-muted', icon: 'help-circle' };
-    return `<span class="badge ${info.cls}"><i data-lucide="${info.icon}"></i>${status}</span>`;
-  }
-
-  function praticienName(id) {
-    const pr = OrthoKine.store.praticiens.find(p => p.id === id);
-    return pr ? pr.name : '—';
-  }
-
-  function praticienSpecialty(id) {
-    const pr = OrthoKine.store.praticiens.find(p => p.id === id);
-    return pr ? pr.specialty : '';
-  }
-
-  function patientName(id) {
-    const p = OrthoKine.store.patients.find(p => p.id === id);
-    return p ? p.name : '—';
-  }
-
-  // ─── DROPDOWN SELECTORS ────────────────────────────────────────────────────
+  // --- DYNAMIC FORM SELECTORS ---
   function renderDropdownSelectors() {
-    const store      = OrthoKine.store;
-    const praticiens = store.getVisiblePraticiens();
-    const patients   = store.getVisiblePatients();
-    const selectLbl  = store.lang === 'fr' ? 'Sélectionner' : 'Select';
-
-    // Patient-form: assign praticien
-    const pPraticienSel = document.getElementById('p-praticien');
-    if (pPraticienSel) {
-      const prev = pPraticienSel.value;
-      pPraticienSel.innerHTML = `<option value="">-- ${selectLbl} --</option>`;
-      praticiens.forEach(pr => {
-        const o = document.createElement('option');
-        o.value = pr.id; o.textContent = `${pr.name} (${pr.specialty})`;
-        pPraticienSel.appendChild(o);
-      });
-      if (prev) pPraticienSel.value = prev;
-    }
-
-    // Appointment form: patient & praticien
-    const aptPatSel = document.getElementById('apt-patient');
-    const aptPrSel  = document.getElementById('apt-praticien');
-    if (aptPatSel) {
-      const prev = aptPatSel.value;
-      aptPatSel.innerHTML = `<option value="">-- ${selectLbl} --</option>`;
-      patients.forEach(p => {
-        const o = document.createElement('option');
-        o.value = p.id; o.textContent = p.name;
-        aptPatSel.appendChild(o);
-      });
-      if (prev) aptPatSel.value = prev;
-    }
-    if (aptPrSel) {
-      const prev = aptPrSel.value;
-      aptPrSel.innerHTML = `<option value="">-- ${selectLbl} --</option>`;
-      praticiens.forEach(pr => {
-        const o = document.createElement('option');
-        o.value = pr.id; o.textContent = `${pr.name} (${pr.specialty})`;
-        aptPrSel.appendChild(o);
-      });
-      if (prev) aptPrSel.value = prev;
-    }
-
-    // Calendar therapist filter
-    const calFilter = document.getElementById('calendar-therapist-filter');
-    if (calFilter) {
-      const prev = calFilter.value;
-      calFilter.innerHTML = `<option value="all">Tous les praticiens</option>`;
-      praticiens.forEach(pr => {
-        const o = document.createElement('option');
-        o.value = pr.id; o.textContent = pr.name;
-        calFilter.appendChild(o);
-      });
-      if (prev) calFilter.value = prev;
-    }
-
-    // Session selector in forms
-    const pSessionSel  = document.getElementById('p-session');
-    const aptSessionSel = document.getElementById('apt-session');
-    [pSessionSel, aptSessionSel].forEach(sel => {
-      if (!sel) return;
-      const prev = sel.value;
-      sel.innerHTML = `<option value="">-- ${selectLbl} --</option>`;
-      const u = store.currentUser;
-      const sessions = (u && u.role !== 'chef_service')
-        ? store.sessions.filter(s => s.id === u.sessionId)
-        : store.sessions;
-      sessions.forEach(s => {
-        const o = document.createElement('option');
-        o.value = s.id; o.textContent = s.name;
-        sel.appendChild(o);
-      });
-      if (prev) sel.value = prev;
-      // Auto-select for non-chef_service
-      if (u && u.role !== 'chef_service' && u.sessionId && !sel.value) {
-        sel.value = u.sessionId;
-      }
-    });
-
-    // Chef session selector (for session management)
-    const chefSessionSel = document.getElementById('sess-chef-user');
-    if (chefSessionSel) {
-      const prev = chefSessionSel.value;
-      const chefUsers = store.users.filter(u => u.role === 'chef_session');
-      chefSessionSel.innerHTML = `<option value="">-- ${selectLbl} --</option>`;
-      chefUsers.forEach(u => {
-        const o = document.createElement('option');
-        o.value = u.id; o.textContent = u.name;
-        chefSessionSel.appendChild(o);
-      });
-      if (prev) chefSessionSel.value = prev;
-    }
-
-    // Assign-praticien modal: praticien list
-    const assignPrSel = document.getElementById('assign-pr-id');
-    if (assignPrSel) {
-      const prev = assignPrSel.value;
-      // Show praticiens without a session or from same session
-      const user = store.currentUser;
-      const available = store.praticiens.filter(p => !p.sessionId || (user && p.sessionId === user.sessionId));
-      assignPrSel.innerHTML = `<option value="">-- ${selectLbl} --</option>`;
-      available.forEach(pr => {
-        const o = document.createElement('option');
-        o.value = pr.id; o.textContent = `${pr.name} (${pr.specialty})`;
-        assignPrSel.appendChild(o);
-      });
-      if (prev) assignPrSel.value = prev;
-    }
-  }
-
-  // ─── 1. DASHBOARD ──────────────────────────────────────────────────────────
-  function renderDashboard() {
-    const store   = OrthoKine.store;
-    const user    = store.currentUser;
-    if (!user) return;
-
-    const todayStr = store.getTodayStr();
-    const allApts  = store.getVisibleAppointments();
-    const allPats  = store.getVisiblePatients();
-    const allPrs   = store.getVisiblePraticiens();
-    const todayApts = allApts.filter(a => a.date === todayStr);
-
-    // Stats cards
-    _setText('stat-sessions-today',    todayApts.length);
-    _setText('stat-total-patients',    allPats.filter(p => p.status === 'Actif').length);
-    _setText('stat-active-therapists', allPrs.length);
-    const pending = allApts.filter(a => a.status === 'Planifiée').length;
-    _setText('stat-pending-hours', pending);
-
-    // Today's appointments table
-    const tbody = document.getElementById('today-appointments-table');
-    if (tbody) {
-      if (todayApts.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state-cell">Aucune séance planifiée aujourd'hui</td></tr>`;
-      } else {
-        tbody.innerHTML = todayApts
-          .sort((a, b) => a.time.localeCompare(b.time))
-          .map(a => {
-            const sess = getSessionDef(a.sessionId);
-            return `
-            <tr>
-              <td><strong>${a.time}</strong></td>
-              <td>${patientName(a.patientId)}</td>
-              <td>
-                <div style="display:flex;align-items:center;gap:0.5rem;">
-                  <span class="session-dot" style="background:${sess.color};"></span>
-                  ${praticienName(a.praticienId)}<br>
-                  <small class="text-muted">${praticienSpecialty(a.praticienId)}</small>
-                </div>
-              </td>
-              <td>${a.type}</td>
-              <td>
-                ${statusBadge(a.status)}
-                <div class="status-actions" style="margin-top:0.35rem;">
-                  ${_statusActions(a)}
-                </div>
-              </td>
-            </tr>`;
-          }).join('');
-      }
-    }
-
-    // Badge
-    _setText('today-rdv-count-badge', `${todayApts.length} rendez-vous`);
-
-    // Chef de Service: session overview cards
-    const sessOverviewEl = document.getElementById('sessions-overview-dash');
-    if (sessOverviewEl) {
-      if (user.role === 'chef_service') {
-        sessOverviewEl.style.display = '';
-        sessOverviewEl.innerHTML = store.sessions.map(sess => {
-          const def    = getSessionDef(sess.id);
-          const chef   = store.getChefSessionUser(sess.id);
-          const prs    = store.praticiens.filter(p => p.sessionId === sess.id);
-          const pats   = store.patients.filter(p => p.sessionId === sess.id);
-          const todaySessApts = store.appointments.filter(a => a.sessionId === sess.id && a.date === todayStr);
-          return `
-          <div class="session-overview-card glass-panel" style="border-top: 3px solid ${def.color};">
-            <div class="session-ov-header">
-              <div class="session-ov-icon" style="background:${def.color}20;color:${def.color};">
-                <i data-lucide="${def.icon}"></i>
-              </div>
-              <div>
-                <h3>${sess.name}</h3>
-                <p class="text-muted small">${chef ? 'Chef: ' + chef.name : 'Aucun chef assigné'}</p>
-              </div>
-            </div>
-            <div class="session-ov-stats">
-              <div class="ov-stat"><span>${prs.length}</span><label>Praticiens</label></div>
-              <div class="ov-stat"><span>${pats.length}</span><label>Patients</label></div>
-              <div class="ov-stat"><span>${todaySessApts.length}</span><label>RDV Auj.</label></div>
-            </div>
-          </div>`;
-        }).join('');
-      } else {
-        sessOverviewEl.style.display = 'none';
-      }
-    }
-
-    // Chef de Session: make stat cards clickable to their pages
-    if (user.role === 'chef_session') {
-      [
-        { id: 'stat-sessions-today',    tab: 'appointments' },
-        { id: 'stat-total-patients',    tab: 'patients' },
-        { id: 'stat-active-therapists', tab: 'mon_equipe' },
-        { id: 'stat-pending-hours',     tab: 'appointments' },
-      ].forEach(({ id, tab }) => {
-        const card = document.getElementById(id)?.closest('.stat-card');
-        if (card) {
-          card.style.cursor = 'pointer';
-          card.onclick = () => OrthoKine.navigateTo(tab);
-        }
-      });
-    }
-  }
-
-  function _statusActions(apt) {
-    const user = OrthoKine.store.currentUser;
-    if (!user) return '';
-    if (apt.status === 'Planifiée') {
-      return `<button class="btn-status-change" onclick="OrthoKine.changeAptStatus('${apt.id}','En cours')" title="Démarrer">
-                <i data-lucide="play"></i>
-              </button>`;
-    }
-    if (apt.status === 'En cours') {
-      return `<button class="btn-status-change btn-done" onclick="OrthoKine.changeAptStatus('${apt.id}','Terminée')" title="Terminer">
-                <i data-lucide="check"></i>
-              </button>`;
-    }
-    return '';
-  }
-
-  function changeAptStatus(id, newStatus) {
-    OrthoKine.store.updateAppointment(id, { status: newStatus });
-    OrthoKine.renderAll();
-  }
-
-  // ─── 2. SESSIONS TAB (chef_service) ───────────────────────────────────────
-  function renderSessionsTab() {
-    const store   = OrthoKine.store;
-    const user    = store.currentUser;
-    const tbody   = document.getElementById('sessions-table-body');
-    if (!tbody || !user || user.role !== 'chef_service') return;
-
-    tbody.innerHTML = store.sessions.map(sess => {
-      const def   = getSessionDef(sess.id);
-      const chef  = store.getChefSessionUser(sess.id);
-      const prs   = store.praticiens.filter(p => p.sessionId === sess.id);
-      const pats  = store.patients.filter(p => p.sessionId === sess.id);
-      const apts  = store.appointments.filter(a => a.sessionId === sess.id);
-      const terminees = apts.filter(a => a.status === 'Terminée').length;
-      const planned   = apts.filter(a => a.status === 'Planifiée').length;
-      const enCours   = apts.filter(a => a.status === 'En cours').length;
-
-      return `
-      <tr>
-        <td>
-          <div style="display:flex;align-items:center;gap:0.75rem;">
-            <div class="session-icon-sm" style="background:${def.color}20;color:${def.color};">
-              <i data-lucide="${def.icon}"></i>
-            </div>
-            <strong>${sess.name}</strong>
-          </div>
-        </td>
-        <td>${chef ? chef.name : '<span class="text-muted">Non assigné</span>'}</td>
-        <td>${prs.length} praticien(s)</td>
-        <td>${pats.length} patient(s)</td>
-        <td>
-          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-            <span class="badge badge-planned">${planned} Planifiée</span>
-            <span class="badge badge-inprogress">${enCours} En cours</span>
-            <span class="badge badge-done">${terminees} Terminée</span>
-          </div>
-        </td>
-        <td>
-          <button class="btn btn-secondary btn-sm" onclick="OrthoKine.openSessionAssignModal('${sess.id}')">
-            <i data-lucide="user-cog"></i> Gérer
-          </button>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  // ─── 3. PATIENTS TABLE ─────────────────────────────────────────────────────
-  function renderPatientsTable() {
-    const store   = OrthoKine.store;
-    const query   = (document.getElementById('patient-search-input')?.value || '').toLowerCase();
-    const patients = store.getVisiblePatients().filter(p =>
-      p.name.toLowerCase().includes(query) ||
-      (p.condition || '').toLowerCase().includes(query)
-    );
-    const tbody = document.getElementById('patients-table-body');
-    if (!tbody) return;
-
-    if (patients.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="empty-state-cell">Aucun patient trouvé</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = patients.map(p => {
-      const sess = getSessionDef(p.sessionId);
-      return `
-      <tr>
-        <td>
-          <div class="patient-name-cell">
-            <div class="patient-avatar">${p.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
-            <div>
-              <strong>${p.name}</strong>
-              <p class="text-muted small">${p.age} ans · ${p.gender}</p>
-            </div>
-          </div>
-        </td>
-        <td>${p.condition}</td>
-        <td>
-          <span class="session-badge-sm" style="background:${sess.color}20;color:${sess.color};">
-            ${sess.name}
-          </span>
-        </td>
-        <td>${praticienName(p.praticienId)}</td>
-        <td>
-          <span class="badge badge-muted">${p.nombreSeances || 0} séances</span>
-        </td>
-        <td>${statusBadge(p.status)}</td>
-        <td>
-          <div class="action-btns">
-            <button class="btn btn-secondary btn-sm" onclick="OrthoKine.openPatientModal('${p.id}')" title="Modifier">
-              <i data-lucide="edit-3"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="OrthoKine.deletePatientConfirm('${p.id}')" title="Supprimer">
-              <i data-lucide="trash-2"></i>
-            </button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  // ─── 4. PRATICIENS (TEAM) TABLE ────────────────────────────────────────────
-  function renderTeam() {
-    const store     = OrthoKine.store;
-    const user      = store.currentUser;
-    const praticiens = store.getVisiblePraticiens();
-
-    const SPECIALTY_ICONS = {
-      'Kinésithérapeute': 'activity',
-      'Pédiatre':          'baby',
-      'Orthopédiste':      'bone',
-      'Ergothérapeute':    'hand',
-      'Psychologue':       'brain',
-    };
-
-    function buildRows(canRemove) {
-      if (praticiens.length === 0) {
-        return `<tr><td colspan="5" class="empty-state-cell">Aucun praticien dans cette session</td></tr>`;
-      }
-      return praticiens.map(pr => {
-        const sess    = getSessionDef(pr.sessionId);
-        const icon    = SPECIALTY_ICONS[pr.specialty] || 'stethoscope';
-        const patsCnt = store.patients.filter(p => p.praticienId === pr.id).length;
-        const aptsCnt = store.appointments.filter(a => a.praticienId === pr.id).length;
-        return `
-        <tr>
-          <td>
-            <div class="patient-name-cell">
-              <div class="patient-avatar" style="background: ${sess.color}20; color:${sess.color};">
-                ${pr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </div>
-              <div>
-                <strong>${pr.name}</strong>
-                <p class="text-muted small">${pr.email}</p>
-              </div>
-            </div>
-          </td>
-          <td>
-            <span class="specialty-badge">
-              <i data-lucide="${icon}"></i> ${pr.specialty}
-            </span>
-          </td>
-          <td>
-            <span class="session-badge-sm" style="background:${sess.color}20;color:${sess.color};">
-              ${sess.name}
-            </span>
-          </td>
-          <td>${patsCnt} patients · ${aptsCnt} RDVs</td>
-          <td>
-            <div class="action-btns">
-              ${canRemove ? `
-              <button class="btn btn-danger btn-sm" onclick="OrthoKine.confirmRemovePraticien('${pr.id}')" title="Retirer de la session">
-                <i data-lucide="user-minus"></i>
-              </button>` : ''}
-            </div>
-          </td>
-        </tr>`;
-      }).join('');
-    }
-
-    const canRemove = user && (user.role === 'chef_service' || user.role === 'chef_session');
-    const rows = buildRows(canRemove);
-
-    // Populate team tab (chef_service)
-    const tbody = document.getElementById('team-table-body');
-    if (tbody) tbody.innerHTML = rows;
-
-    // Populate mon_equipe tab (chef_session)
-    const equipeTbody = document.getElementById('equipe-table-body');
-    if (equipeTbody) equipeTbody.innerHTML = rows;
-  }
-
-  // ─── 5. CALENDAR ───────────────────────────────────────────────────────────
-  function renderCalendar(month, year) {
-    const store      = OrthoKine.store;
-    const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-    const filterVal  = document.getElementById('calendar-therapist-filter')?.value || 'all';
-
-    const titleEl = document.getElementById('calendar-current-month-year');
-    if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
-
-    const filterBadge = document.getElementById('calendar-filter-badge');
-    if (filterBadge) {
-      if (filterVal === 'all') {
-        filterBadge.textContent = 'Tous les praticiens';
-      } else {
-        const pr = store.praticiens.find(p => p.id === filterVal);
-        filterBadge.textContent = pr ? pr.name : 'Filtré';
-      }
-    }
-
-    const allApts = store.getVisibleAppointments().filter(a => {
-      if (filterVal !== 'all' && a.praticienId !== filterVal) return false;
-      const d = new Date(a.date + 'T00:00:00');
-      return d.getMonth() === month && d.getFullYear() === year;
-    });
-
-    // Group by date
-    const byDate = {};
-    allApts.forEach(a => {
-      if (!byDate[a.date]) byDate[a.date] = [];
-      byDate[a.date].push(a);
-    });
-
-    const grid = document.getElementById('calendar-grid');
-    if (!grid) return;
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const offset   = (firstDay + 6) % 7; // Week starts Monday
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const todayStr = store.getTodayStr();
-
-    let html = '';
-    for (let i = 0; i < offset; i++) html += '<div class="calendar-cell empty"></div>';
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr  = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const dayApts  = byDate[dateStr] || [];
-      const isToday  = dateStr === todayStr;
-
-      html += `
-      <div class="calendar-cell ${isToday ? 'today' : ''}" onclick="OrthoKine.openDayDetail('${dateStr}')">
-        <div class="cell-date ${isToday ? 'today-label' : ''}">${d}</div>
-        <div class="cell-events">
-          ${dayApts.slice(0, 3).map(a => {
-            const sess = getSessionDef(a.sessionId);
-            return `<div class="cal-event" style="--event-color:${sess.color};background:${sess.color}20;border-left:2px solid ${sess.color};"
-                     onclick="event.stopPropagation();OrthoKine.openAppointmentModal('${a.id}')">
-                      <span>${a.time}</span> ${patientName(a.patientId)}
-                    </div>`;
-          }).join('')}
-          ${dayApts.length > 3 ? `<div class="cal-more">+${dayApts.length - 3} autres</div>` : ''}
-        </div>
-      </div>`;
-    }
-
-    grid.innerHTML = html;
-  }
-
-  // ─── DAY DETAIL MODAL ─────────────────────────────────────────────────────
-  function openDayDetail(dateStr) {
-    const store    = OrthoKine.store;
-    const allApts  = store.getVisibleAppointments().filter(a => a.date === dateStr);
-    const modal    = document.getElementById('day-detail-modal');
-    const titleEl  = document.getElementById('day-detail-title');
-    const bodyEl   = document.getElementById('day-detail-body');
-    if (!modal) return;
-
-    const dateLabel = getLocalizedDateStr(dateStr);
-    if (titleEl) titleEl.textContent = dateLabel;
-
-    if (bodyEl) {
-      if (allApts.length === 0) {
-        bodyEl.innerHTML = `
-          <div style="text-align:center;padding:2rem;color:hsl(var(--muted-foreground));">
-            <i data-lucide="calendar-x" style="width:40px;height:40px;margin-bottom:1rem;"></i>
-            <p>Aucun rendez-vous ce jour.</p>
-            <button class="btn btn-primary" style="margin-top:1rem;" onclick="document.getElementById('day-detail-modal').close();OrthoKine.openAppointmentForDate('${dateStr}')">
-              <i data-lucide="calendar-plus"></i> Planifier un RDV
-            </button>
-          </div>`;
-      } else {
-        const sorted = [...allApts].sort((a, b) => a.time.localeCompare(b.time));
-        bodyEl.innerHTML = `
-          <div class="day-detail-list">
-            ${sorted.map(a => {
-              const sess = getSessionDef(a.sessionId);
-              return `
-              <div class="day-detail-item" style="border-left: 3px solid ${sess.color};">
-                <div class="day-detail-time">${a.time}</div>
-                <div class="day-detail-info">
-                  <strong>${patientName(a.patientId)}</strong>
-                  <span class="text-muted small">${a.type}</span>
-                  <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.2rem;flex-wrap:wrap;">
-                    <span class="session-badge-sm" style="background:${sess.color}20;color:${sess.color};">${sess.name}</span>
-                    <span class="text-muted small">${praticienName(a.praticienId)}</span>
-                  </div>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:0.3rem;align-items:flex-end;">
-                  ${statusBadge(a.status)}
-                  <div style="display:flex;gap:0.3rem;">
-                    ${_statusActions(a)}
-                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('day-detail-modal').close();OrthoKine.openAppointmentModal('${a.id}')">
-                      <i data-lucide="edit-3"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>`;
-            }).join('')}
-          </div>
-          <div style="text-align:right;margin-top:1rem;">
-            <button class="btn btn-primary" onclick="document.getElementById('day-detail-modal').close();OrthoKine.openAppointmentForDate('${dateStr}')">
-              <i data-lucide="calendar-plus"></i> Ajouter un RDV
-            </button>
-          </div>`;
-      }
-    }
-
-    modal.showModal();
-    lucide.createIcons();
-  }
-
-  // ─── 6. APPOINTMENTS LIST (for Mon Équipe / Mes Séances) ──────────────────
-  function renderAppointmentsList() {
-    const store  = OrthoKine.store;
-    const apts   = store.getVisibleAppointments().sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return a.time.localeCompare(b.time);
-    });
-    const tbody = document.getElementById('appointments-list-body');
-    if (!tbody) return;
-
-    if (apts.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="empty-state-cell">Aucun rendez-vous</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = apts.map(a => {
-      const sess = getSessionDef(a.sessionId);
-      return `
-      <tr>
-        <td><strong>${getLocalizedDateStr(a.date)}</strong><br><small>${a.time}</small></td>
-        <td>${patientName(a.patientId)}</td>
-        <td>${praticienName(a.praticienId)}</td>
-        <td>
-          <span class="session-badge-sm" style="background:${sess.color}20;color:${sess.color};">
-            ${sess.name}
-          </span>
-        </td>
-        <td>${a.type}${a.isFirstApt ? ' <span class="badge badge-muted">1er RDV</span>' : ''}</td>
-        <td>
-          ${statusBadge(a.status)}
-          <div style="margin-top:0.35rem;display:flex;gap:0.3rem;">
-            ${_statusActions(a)}
-            <button class="btn btn-secondary btn-sm" onclick="OrthoKine.openAppointmentModal('${a.id}')" title="Modifier">
-              <i data-lucide="edit-3"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="OrthoKine.deleteAptConfirm('${a.id}')" title="Supprimer">
-              <i data-lucide="trash-2"></i>
-            </button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  // ─── 7. MON ÉQUIPE (chef_session) ─────────────────────────────────────────
-  function renderMonEquipe() {
+    const pTherapistSelect = document.getElementById("p-therapist");
+    const aptPatientSelect = document.getElementById("apt-patient");
+    const aptTherapistSelect = document.getElementById("apt-therapist");
+    const calTherapistFilter = document.getElementById("calendar-therapist-filter");
     const store = OrthoKine.store;
-    const user  = store.currentUser;
-    if (!user || user.role !== 'chef_session') return;
 
-    const sess = store.getSessionForUser(user.id);
-    const sessHeaderEl = document.getElementById('mon-equipe-session-name');
-    if (sessHeaderEl && sess) {
-      const def = getSessionDef(sess.id);
-      sessHeaderEl.innerHTML = `<span style="color:${def.color};">${sess.name}</span>`;
+    // Keep current selection values
+    const prevPTherapist = pTherapistSelect.value;
+    const prevAptPatient = aptPatientSelect.value;
+    const prevAptTherapist = aptTherapistSelect.value;
+    const prevCalFilter = calTherapistFilter.value;
+
+    // Clear options
+    pTherapistSelect.innerHTML = "";
+    
+    const selectLabel = store.lang === 'fr' ? 'Sélectionner' : (store.lang === 'es' ? 'Seleccionar' : 'Select');
+    
+    aptPatientSelect.innerHTML = "";
+    const pOption = document.createElement("option");
+    pOption.value = "";
+    pOption.textContent = `-- ${selectLabel} --`;
+    aptPatientSelect.appendChild(pOption);
+
+    aptTherapistSelect.innerHTML = "";
+    const tOption = document.createElement("option");
+    tOption.value = "";
+    tOption.textContent = `-- ${selectLabel} --`;
+    aptTherapistSelect.appendChild(tOption);
+    
+    // Repopulate Staff
+    store.staff.forEach(s => {
+      const specialtyTranslation = s.specialty === "Orthophoniste" ? 
+                                   (OrthoKine.getTranslation('role_ortho') || s.specialty) : 
+                                   (OrthoKine.getTranslation('role_kine') || s.specialty);
+
+      const opt1 = document.createElement("option");
+      opt1.value = s.id;
+      opt1.textContent = `${s.name} (${specialtyTranslation})`;
+      pTherapistSelect.appendChild(opt1);
+
+      const opt2 = document.createElement("option");
+      opt2.value = s.id;
+      opt2.textContent = `${s.name} (${specialtyTranslation})`;
+      aptTherapistSelect.appendChild(opt2);
+    });
+
+    // Repopulate Patients
+    store.patients.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name;
+      aptPatientSelect.appendChild(opt);
+    });
+
+    // Repopulate Calendar filter
+    const allTherapistsTranslation = OrthoKine.getTranslation('filter_all_therapists') || "Tous les thérapeutes";
+    calTherapistFilter.innerHTML = "";
+    const allOption = document.createElement("option");
+    allOption.value = "all";
+    allOption.textContent = allTherapistsTranslation;
+    calTherapistFilter.appendChild(allOption);
+    store.staff.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.name;
+      calTherapistFilter.appendChild(opt);
+    });
+
+    // Restore values
+    if (prevPTherapist) pTherapistSelect.value = prevPTherapist;
+    if (prevAptPatient) aptPatientSelect.value = prevAptPatient;
+    if (prevAptTherapist) aptTherapistSelect.value = prevAptTherapist;
+    if (prevCalFilter) calTherapistFilter.value = prevCalFilter;
+  }
+
+  // --- 1. DASHBOARD ---
+  function renderDashboard() {
+    const todayStr = "2026-06-02"; // Standardized system date
+    const store = OrthoKine.store;
+    const todayAppointments = store.appointments.filter(a => a.date === todayStr);
+
+    // Update Stats
+    document.getElementById("stat-sessions-today").textContent = todayAppointments.length;
+    document.getElementById("stat-total-patients").textContent = store.patients.filter(p => p.status === "Active").length;
+    document.getElementById("stat-active-therapists").textContent = store.staff.length;
+    
+    // Weekly Session hours count (approx 1h per appointment)
+    const totalWeeklyHours = store.appointments.length; 
+    document.getElementById("stat-pending-hours").textContent = totalWeeklyHours + "h";
+    
+    // Translate system live date
+    document.getElementById("live-time-badge").textContent = getLocalizedDateStr(todayStr);
+
+    const appointmentsTranslation = store.lang === 'fr' ? 'rendez-vous' : (store.lang === 'es' ? 'citas' : 'appointments');
+    document.getElementById("today-rdv-count-badge").textContent = `${todayAppointments.length} ${OrthoKine.escapeHTML(appointmentsTranslation)}`;
+
+    // Fill Today's Appointment Table
+    const tbody = document.getElementById("today-appointments-table");
+    tbody.innerHTML = "";
+
+    if (todayAppointments.length === 0) {
+      const emptyTranslation = {
+        fr: "Aucune séance planifiée pour aujourd'hui.",
+        en: "No appointments scheduled for today.",
+        es: "No hay citas programadas para hoy."
+      };
+      tbody.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.style.textAlign = "center";
+      td.style.color = "hsl(var(--muted-foreground))";
+      td.style.padding = "2rem";
+      td.textContent = OrthoKine.getLangValue(emptyTranslation);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
     }
 
-    // Render team table
-    renderTeam();
+    // Sort by time
+    todayAppointments.sort((a, b) => a.time.localeCompare(b.time));
 
-    // Render patients in this session
-    renderPatientsTable();
+    todayAppointments.forEach(apt => {
+      const patient = store.patients.find(p => p.id === apt.patientId) || { name: "Unknown" };
+      const staff = store.staff.find(s => s.id === apt.therapistId) || { name: "Unknown", specialty: "" };
 
-    // Render appointments
-    renderAppointmentsList();
+      const specialtyTranslation = staff.specialty === "Orthophoniste" ? 
+                                   (OrthoKine.getTranslation('role_ortho') || staff.specialty) : 
+                                   (OrthoKine.getTranslation('role_kine') || staff.specialty);
+
+      const typeTranslation = apt.type === "Initial Evaluation" ? (OrthoKine.getTranslation('type_evaluation') || apt.type) :
+                              (apt.type === "Speech Therapy Session" ? (OrthoKine.getTranslation('type_speech') || apt.type) :
+                              (apt.type === "Kinesitherapy Session" ? (OrthoKine.getTranslation('type_kine') || apt.type) :
+                              (OrthoKine.getTranslation('type_follow_up') || apt.type)));
+
+      const statusBadge = apt.status === "Completed" ? "badge-success" : (apt.status === "Cancelled" ? "badge-danger" : "badge-primary");
+      const statusTranslation = apt.status === "Completed" ? (OrthoKine.getTranslation('status_completed') || apt.status) :
+                                (apt.status === "Cancelled" ? (OrthoKine.getTranslation('status_cancelled') || apt.status) :
+                                (OrthoKine.getTranslation('status_scheduled') || apt.status));
+
+      const row = document.createElement("tr");
+
+      // Time Cell
+      const timeCell = row.insertCell();
+      timeCell.style.fontWeight = "700";
+      timeCell.textContent = apt.time;
+
+      // Patient Info Cell
+      const patientCell = row.insertCell();
+      const patientNameDiv = document.createElement("div");
+      patientNameDiv.style.fontWeight = "600";
+      patientNameDiv.textContent = patient.name;
+      const patientContactDiv = document.createElement("div");
+      patientContactDiv.style.fontSize = "0.75rem";
+      patientContactDiv.style.color = "hsl(var(--muted-foreground))";
+      patientContactDiv.textContent = patient.contact;
+      patientCell.appendChild(patientNameDiv);
+      patientCell.appendChild(patientContactDiv);
+
+      // Staff Info Cell
+      const staffCell = row.insertCell();
+      const staffNameDiv = document.createElement("div");
+      staffNameDiv.style.fontWeight = "500";
+      staffNameDiv.textContent = staff.name;
+      const staffSpecDiv = document.createElement("div");
+      staffSpecDiv.style.fontSize = "0.75rem";
+      staffSpecDiv.style.color = "hsl(var(--primary))";
+      staffSpecDiv.style.fontWeight = "600";
+      staffSpecDiv.textContent = specialtyTranslation;
+      staffCell.appendChild(staffNameDiv);
+      staffCell.appendChild(staffSpecDiv);
+
+      // Type Cell
+      const typeCell = row.insertCell();
+      const typeSpan = document.createElement("span");
+      typeSpan.className = "badge badge-muted";
+      typeSpan.textContent = typeTranslation;
+      typeCell.appendChild(typeSpan);
+
+      // Status Cell
+      const statusCell = row.insertCell();
+      const statusSpan = document.createElement("span");
+      statusSpan.className = `badge ${statusBadge}`;
+      statusSpan.textContent = statusTranslation;
+      statusCell.appendChild(statusSpan);
+
+      tbody.appendChild(row);
+    });
   }
 
-  // ─── UTILITY ───────────────────────────────────────────────────────────────
-  function _setText(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
+  // --- 2. PATIENTS REGISTRY ---
+  function renderPatientsTable() {
+    const searchQuery = document.getElementById("patient-search-input").value.toLowerCase();
+    const tbody = document.getElementById("patients-table-body");
+    const store = OrthoKine.store;
+    tbody.innerHTML = "";
+
+    const filteredPatients = store.patients.filter(p => {
+      return p.name.toLowerCase().includes(searchQuery) || 
+             p.condition.toLowerCase().includes(searchQuery) ||
+             p.id.toLowerCase().includes(searchQuery);
+    });
+
+    if (filteredPatients.length === 0) {
+      const emptyMsg = {
+        fr: "Aucun profil patient correspondant trouvé.",
+        en: "No matching patient profiles found.",
+        es: "No se encontraron perfiles de pacientes correspondientes."
+      };
+      tbody.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 7;
+      td.style.textAlign = "center";
+      td.style.color = "hsl(var(--muted-foreground))";
+      td.style.padding = "2rem";
+      td.textContent = OrthoKine.getLangValue(emptyMsg);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filteredPatients.forEach(p => {
+      const staff = store.staff.find(s => s.id === p.therapistId) || { name: "Unassigned" };
+      
+      let statusClass = "badge-success";
+      if (p.status === "On Hold") statusClass = "badge-warning";
+      if (p.status === "Discharged") statusClass = "badge-danger";
+
+      const statusTranslation = p.status === "Active" ? (OrthoKine.getTranslation('status_active') || p.status) :
+                                (p.status === "On Hold" ? (OrthoKine.getTranslation('status_on_hold') || p.status) :
+                                (OrthoKine.getTranslation('status_discharged') || p.status));
+
+      const genderTranslation = p.gender === "Male" ? (OrthoKine.getTranslation('gender_male') || p.gender) :
+                                (p.gender === "Female" ? (OrthoKine.getTranslation('gender_female') || p.gender) :
+                                (OrthoKine.getTranslation('gender_other') || p.gender));
+
+      const row = document.createElement("tr");
+
+      // Patient Info Cell
+      const nameCell = row.insertCell();
+      const patientNameDiv = document.createElement("div");
+      patientNameDiv.style.fontWeight = "700";
+      patientNameDiv.textContent = p.name;
+      const patientIdDiv = document.createElement("div");
+      patientIdDiv.style.fontSize = "0.75rem";
+      patientIdDiv.style.color = "hsl(var(--muted-foreground))";
+      patientIdDiv.textContent = `ID: ${p.id}`;
+      nameCell.appendChild(patientNameDiv);
+      nameCell.appendChild(patientIdDiv);
+
+      // Age / Gender Cell
+      const ageGenderCell = row.insertCell();
+      ageGenderCell.textContent = `${p.age} / ${genderTranslation}`;
+
+      // Condition Cell
+      const conditionCell = row.insertCell();
+      const conditionSpan = document.createElement("span");
+      conditionSpan.className = "badge badge-muted";
+      conditionSpan.style.maxWidth = "180px";
+      conditionSpan.style.overflow = "hidden";
+      conditionSpan.style.textOverflow = "ellipsis";
+      conditionSpan.style.whiteSpace = "nowrap";
+      conditionSpan.textContent = p.condition;
+      conditionCell.appendChild(conditionSpan);
+
+      // Assigned Therapist Cell
+      const therapistCell = row.insertCell();
+      therapistCell.style.fontWeight = "500";
+      therapistCell.style.color = "hsl(var(--primary))";
+      therapistCell.textContent = staff.name;
+
+      // Contact Cell
+      const contactCell = row.insertCell();
+      contactCell.textContent = p.contact;
+
+      // Status Cell
+      const statusCell = row.insertCell();
+      const statusSpan = document.createElement("span");
+      statusSpan.className = `badge ${statusClass}`;
+      statusSpan.textContent = statusTranslation;
+      statusCell.appendChild(statusSpan);
+
+      // Actions Cell
+      const actionsCell = row.insertCell();
+      const btnContainer = document.createElement("div");
+      btnContainer.style.display = "flex";
+      btnContainer.style.gap = "0.5rem";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-secondary";
+      editBtn.style.padding = "0.4rem";
+      editBtn.style.fontSize = "0.8rem";
+      editBtn.onclick = () => { OrthoKine.openPatientModal(p.id); };
+      const editIcon = document.createElement("i");
+      editIcon.setAttribute("data-lucide", "edit");
+      editIcon.style.width = "14px";
+      editIcon.style.height = "14px";
+      editBtn.appendChild(editIcon);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-danger";
+      deleteBtn.style.padding = "0.4rem";
+      deleteBtn.style.fontSize = "0.8rem";
+      deleteBtn.onclick = () => { OrthoKine.deletePatientConfirm(p.id); };
+      const deleteIcon = document.createElement("i");
+      deleteIcon.setAttribute("data-lucide", "trash-2");
+      deleteIcon.style.width = "14px";
+      deleteIcon.style.height = "14px";
+      deleteBtn.appendChild(deleteIcon);
+
+      btnContainer.appendChild(editBtn);
+      btnContainer.appendChild(deleteBtn);
+      actionsCell.appendChild(btnContainer);
+
+      tbody.appendChild(row);
+    });
   }
 
-  function deleteAptConfirm(id) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
-      OrthoKine.store.deleteAppointment(id);
-      OrthoKine.renderAll();
+  // --- 3. SCHEDULE CALENDAR ---
+  function renderCalendar(month, year) {
+    const container = document.getElementById("calendar-dates-container");
+    const monthYearLabel = document.getElementById("calendar-current-month-year");
+    const therapistFilter = document.getElementById("calendar-therapist-filter").value;
+    const store = OrthoKine.store;
+    
+    container.innerHTML = "";
+
+    const monthNames = {
+      fr: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+      en: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+      es: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    };
+    
+    const names = OrthoKine.getLangValue(monthNames);
+    monthYearLabel.textContent = `${names.at(month)} ${year}`;
+
+    // Get first day of the month
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    // Adjust so Mon=0, Tue=1, ..., Sun=6
+    const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+    // 1. Fill previous month dates (muted)
+    for (let i = adjustedFirstDay - 1; i >= 0; i--) {
+      const day = prevMonthTotalDays - i;
+      const cell = document.createElement("div");
+      cell.className = "calendar-cell muted";
+      const numSpan = document.createElement("span");
+      numSpan.className = "calendar-cell-num";
+      numSpan.textContent = day;
+      cell.appendChild(numSpan);
+      container.appendChild(cell);
+    }
+
+    // 2. Fill active month dates
+    for (let day = 1; day <= totalDays; day++) {
+      const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      // Filter appointments for this date
+      let dayApts = store.appointments.filter(a => a.date === formattedDate);
+      if (therapistFilter !== "all") {
+        dayApts = dayApts.filter(a => a.therapistId === therapistFilter);
+      }
+
+      const isToday = formattedDate === "2026-06-02";
+      const cellClass = isToday ? "calendar-cell today" : "calendar-cell";
+
+      const cell = document.createElement("div");
+      cell.className = cellClass;
+      cell.onclick = () => { OrthoKine.openAppointmentForDate(formattedDate); };
+
+      const numSpan = document.createElement("span");
+      numSpan.className = "calendar-cell-num";
+      numSpan.textContent = day;
+      cell.appendChild(numSpan);
+
+      const eventsDiv = document.createElement("div");
+      eventsDiv.className = "calendar-cell-events";
+
+      dayApts.slice(0, 3).forEach(apt => {
+        const patient = store.patients.find(p => p.id === apt.patientId) || { name: "Unknown" };
+        const therapist = store.staff.find(s => s.id === apt.therapistId) || { specialty: "" };
+        
+        const eventDot = document.createElement("div");
+        eventDot.className = "calendar-event-dot";
+        if (therapist.specialty === "Orthophoniste") {
+          eventDot.style.backgroundColor = "hsl(var(--primary) / 0.15)";
+          eventDot.style.color = "hsl(var(--primary))";
+        } else {
+          eventDot.style.backgroundColor = "hsl(var(--accent) / 0.15)";
+          eventDot.style.color = "hsl(var(--accent))";
+        }
+        eventDot.onclick = (e) => {
+          e.stopPropagation();
+          OrthoKine.openAppointmentModal(apt.id);
+        };
+
+        const timeStrong = document.createElement("strong");
+        timeStrong.textContent = apt.time;
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = patient.name;
+        
+        eventDot.appendChild(timeStrong);
+        eventDot.appendChild(document.createTextNode(" "));
+        eventDot.appendChild(nameSpan);
+        eventsDiv.appendChild(eventDot);
+      });
+
+      if (dayApts.length > 3) {
+        const moreStr = store.lang === 'fr' ? 'de plus' : (store.lang === 'es' ? 'más' : 'more');
+        const moreDiv = document.createElement("div");
+        moreDiv.style.fontSize = "0.7rem";
+        moreDiv.style.fontWeight = "700";
+        moreDiv.style.textAlign = "center";
+        moreDiv.style.color = "hsl(var(--muted-foreground))";
+        moreDiv.textContent = `+${dayApts.length - 3} ${moreStr}`;
+        eventsDiv.appendChild(moreDiv);
+      }
+
+      cell.appendChild(eventsDiv);
+      container.appendChild(cell);
+    }
+
+    // 3. Fill remaining space to keep calendar square (42 cells total)
+    const remainingCells = 42 - (adjustedFirstDay + totalDays);
+    for (let day = 1; day <= remainingCells; day++) {
+      const cell = document.createElement("div");
+      cell.className = "calendar-cell muted";
+      const numSpan = document.createElement("span");
+      numSpan.className = "calendar-cell-num";
+      numSpan.textContent = day;
+      cell.appendChild(numSpan);
+      container.appendChild(cell);
     }
   }
 
-  function confirmRemovePraticien(praticienId) {
-    const pr = OrthoKine.store.praticiens.find(p => p.id === praticienId);
-    if (!pr) return;
-    if (confirm(`Retirer "${pr.name}" de sa session ? Il(elle) restera dans le système mais ne sera plus assigné(e).`)) {
-      OrthoKine.store.removePraticienFromSession(praticienId);
-      OrthoKine.renderAll();
-    }
+  // --- 4. TEAM MEMBERS ---
+  function renderTeam() {
+    const grid = document.getElementById("team-members-grid");
+    const store = OrthoKine.store;
+    grid.innerHTML = "";
+
+    store.staff.forEach(s => {
+      // Count active patients and scheduled appointments for this staff member
+      const patientCount = store.patients.filter(p => p.therapistId === s.id).length;
+      const sessionCount = store.appointments.filter(a => a.therapistId === s.id).length;
+
+      const initials = s.name.split(" ").map(n => n[0]).join("").slice(0, 2);
+
+      // Specialty translation
+      const specialtyTranslation = s.specialty === "Orthophoniste" ? 
+                                   (OrthoKine.getTranslation('role_ortho') || s.specialty) : 
+                                   (OrthoKine.getTranslation('role_kine') || s.specialty);
+
+      const patientsTranslation = store.lang === 'fr' ? 'Patients' : (store.lang === 'es' ? 'Pacientes' : 'Patients');
+      const sessionsTranslation = store.lang === 'fr' ? 'Séances' : (store.lang === 'es' ? 'Sesiones' : 'Sessions');
+
+      const cardDiv = document.createElement("div");
+      cardDiv.className = "team-card glass-panel";
+
+      const avatarDiv = document.createElement("div");
+      avatarDiv.className = "team-card-avatar";
+      avatarDiv.textContent = initials;
+      cardDiv.appendChild(avatarDiv);
+
+      const nameH3 = document.createElement("h3");
+      nameH3.textContent = s.name;
+      cardDiv.appendChild(nameH3);
+
+      const specialtyP = document.createElement("p");
+      specialtyP.className = "specialty";
+      specialtyP.textContent = specialtyTranslation;
+      cardDiv.appendChild(specialtyP);
+
+      const emailP = document.createElement("p");
+      emailP.className = "email";
+      emailP.textContent = s.email;
+      cardDiv.appendChild(emailP);
+
+      const statsDiv = document.createElement("div");
+      statsDiv.className = "team-card-stats";
+
+      const patientStat = document.createElement("div");
+      patientStat.className = "team-stat";
+      const patientH5 = document.createElement("h5");
+      patientH5.textContent = patientCount;
+      const patientP = document.createElement("p");
+      patientP.textContent = patientsTranslation;
+      patientStat.appendChild(patientH5);
+      patientStat.appendChild(patientP);
+
+      const sessionStat = document.createElement("div");
+      sessionStat.className = "team-stat";
+      const sessionH5 = document.createElement("h5");
+      sessionH5.textContent = sessionCount;
+      const sessionP = document.createElement("p");
+      sessionP.textContent = sessionsTranslation;
+      sessionStat.appendChild(sessionH5);
+      sessionStat.appendChild(sessionP);
+
+      statsDiv.appendChild(patientStat);
+      statsDiv.appendChild(sessionStat);
+      cardDiv.appendChild(statsDiv);
+
+      grid.appendChild(cardDiv);
+    });
   }
 
-  // ─── RENDER ALL ────────────────────────────────────────────────────────────
   function renderAll() {
+    if (!OrthoKine.store.loggedIn) return;
+
     renderDropdownSelectors();
     renderDashboard();
     renderPatientsTable();
+    renderCalendar(OrthoKine.currentCalendarMonth, OrthoKine.currentCalendarYear);
     renderTeam();
-    renderAppointmentsList();
-    renderSessionsTab();
-    renderMonEquipe();
-    _applyRoleVisibility();
-    OrthoKine.applyTranslations();
+    
+    // Re-run Lucide Icons to bind SVG visuals
     lucide.createIcons();
   }
 
-  // Hide/show UI elements based on role
-  function _applyRoleVisibility() {
-    const user = OrthoKine.store.currentUser;
-    if (!user) return;
-    // Only chef_session can add/see patients
-    const canAddPatient = user.role === 'chef_session';
-    ['add-patient-trigger', 'dash-quick-patient-btn'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = canAddPatient ? '' : 'none';
-    });
-    // Only praticien and chef_session can schedule RDV from header
-    const globalRdvBtn = document.getElementById('global-new-rdv-btn');
-    if (globalRdvBtn) globalRdvBtn.style.display = (user.role !== 'chef_service') ? '' : 'none';
-  }
+  OrthoKine.currentCalendarMonth = 5; // June (0-indexed)
+  OrthoKine.currentCalendarYear = 2026;
 
-  // ─── EXPORTS ───────────────────────────────────────────────────────────────
-  OrthoKine.renderAll             = renderAll;
-  OrthoKine.renderDashboard       = renderDashboard;
-  OrthoKine.renderPatientsTable   = renderPatientsTable;
-  OrthoKine.renderTeam            = renderTeam;
-  OrthoKine.renderCalendar        = renderCalendar;
-  OrthoKine.renderSessionsTab     = renderSessionsTab;
-  OrthoKine.renderMonEquipe       = renderMonEquipe;
-  OrthoKine.renderAppointmentsList= renderAppointmentsList;
-  OrthoKine.changeAptStatus       = changeAptStatus;
-  OrthoKine.deleteAptConfirm      = deleteAptConfirm;
-  OrthoKine.confirmRemovePraticien= confirmRemovePraticien;
-  OrthoKine.openDayDetail         = openDayDetail;
+  OrthoKine.renderDropdownSelectors = renderDropdownSelectors;
+  OrthoKine.renderDashboard = renderDashboard;
+  OrthoKine.renderPatientsTable = renderPatientsTable;
+  OrthoKine.renderCalendar = renderCalendar;
+  OrthoKine.renderTeam = renderTeam;
+  OrthoKine.renderAll = renderAll;
 })();

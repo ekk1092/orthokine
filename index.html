@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrthoKine Portal | Gestion Clinique & Équipe</title>
-  <meta name="description" content="Plateforme de gestion multi-rôles pour le service de kinésithérapie. Chef de Service, Chefs de Session et Praticiens.">
+  <meta name="description" content="Plateforme de gestion pour cabinets d'orthophonie et de kinésithérapie. Gérez vos patients, employés et rendez-vous facilement.">
   <link rel="stylesheet" href="index.css">
-  <link rel="icon" href="data:,">
+  <!-- Lucide Icons CDN for sleek vector iconography -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-  <!-- Sidebar Backdrop -->
+  <!-- Sidebar Backdrop overlay for mobile screens -->
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- ==================== LOGIN SCREEN ==================== -->
@@ -22,426 +22,342 @@
         <h2>OrthoKine</h2>
         <p data-i18n="login_subtitle">Portail de Gestion Clinique</p>
       </div>
-
+      
       <form id="login-form">
         <div class="form-group">
           <label for="login-email" data-i18n="login_email_label">Adresse E-mail</label>
-          <input type="email" id="login-email" class="form-control" required placeholder="votre@orthokine.com" autocomplete="email">
+          <input type="email" id="login-email" class="form-control" required placeholder="admin@orthokine.com" value="admin@orthokine.com">
         </div>
         <div class="form-group">
           <label for="login-password" data-i18n="login_password_label">Mot de passe</label>
-          <input type="password" id="login-password" class="form-control" required placeholder="••••••••" autocomplete="current-password">
+          <input type="password" id="login-password" class="form-control" required placeholder="••••••••" value="admin">
         </div>
-
+        
         <div id="login-error-msg" class="login-error" style="display: none;" data-i18n="login_error">
           Adresse e-mail ou mot de passe incorrect.
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width:100%;padding:0.85rem;margin-top:0.5rem;" data-i18n="login_btn">
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; margin-top: 0.5rem;" data-i18n="login_btn">
           Se connecter
         </button>
       </form>
-
-      <!-- Demo credentials hint -->
-      <div class="login-demo-hint">
-        <p class="text-muted small" style="text-align:center;margin-top:1rem;font-size:0.75rem;">
-          <strong>Démo Chef de Service :</strong> chef@orthokine.com / chef2026<br>
-          <strong>Démo Chef Session :</strong> pediatrie@orthokine.com / session123<br>
-          <strong>Démo Praticien :</strong> sophie@orthokine.com / kine123
-        </p>
-      </div>
     </div>
   </div>
 
-  <!-- ==================== MAIN APPLICATION ==================== -->
-  <div class="app-container" id="main-app" style="display:none;">
-
-    <!-- ── Sidebar ───────────────────────────────────────────── -->
+  <!-- ==================== MAIN APPLICATION CONTAINER ==================== -->
+  <div class="app-container" id="main-app" style="display: none;">
+    
+    <!-- Sidebar Navigation -->
     <aside class="sidebar" id="app-sidebar">
-      <div class="brand" id="brand-home-link" style="cursor:pointer;">
+      <div class="brand" id="brand-home-link" style="cursor: pointer;">
         <div class="brand-icon">OK</div>
         <div class="brand-details">
           <h2>OrthoKine</h2>
           <p data-i18n="sidebar_subtitle">Portail Clinique</p>
         </div>
       </div>
-
+      
       <nav class="nav-links">
-        <!-- ALL roles -->
-        <a class="nav-link active" data-tab="dashboard" data-roles="chef_service,chef_session,praticien">
+        <a class="nav-link active" data-tab="dashboard">
           <i data-lucide="layout-dashboard"></i>
           <span data-i18n="nav_dashboard">Tableau de bord</span>
         </a>
-        <!-- chef_service only -->
-        <a class="nav-link" data-tab="sessions" data-roles="chef_service">
-          <i data-lucide="layers"></i>
-          <span>Sessions</span>
-        </a>
-        <!-- chef_session: team management -->
-        <a class="nav-link" data-tab="mon_equipe" data-roles="chef_session">
+        <a class="nav-link" data-tab="patients">
           <i data-lucide="users"></i>
-          <span>Mon Équipe</span>
-        </a>
-        <!-- ALL roles -->
-        <a class="nav-link" data-tab="patients" data-roles="chef_service,chef_session,praticien">
-          <i data-lucide="user-round"></i>
           <span data-i18n="nav_patients">Patients</span>
         </a>
-        <!-- ALL roles -->
-        <a class="nav-link" data-tab="appointments" data-roles="chef_service,chef_session,praticien">
+        <a class="nav-link" data-tab="appointments">
           <i data-lucide="calendar"></i>
           <span data-i18n="nav_appointments">Rendez-vous</span>
         </a>
-        <!-- chef_service only: all praticiens -->
-        <a class="nav-link" data-tab="team" data-roles="chef_service">
-          <i data-lucide="stethoscope"></i>
-          <span>Praticiens</span>
+        <a class="nav-link" data-tab="team">
+          <i data-lucide="user-check"></i>
+          <span data-i18n="nav_team">Membres d'équipe</span>
         </a>
-        <!-- ALL roles -->
-        <a class="nav-link" data-tab="settings" data-roles="chef_service,chef_session,praticien">
+        <a class="nav-link" data-tab="settings">
           <i data-lucide="settings"></i>
           <span data-i18n="nav_settings">Paramètres</span>
         </a>
       </nav>
-
+      
       <div class="sidebar-footer">
         <button class="theme-toggle-btn" id="theme-toggle">
           <i data-lucide="sun" id="theme-icon"></i>
           <span id="theme-text" data-i18n="theme_light">Mode Clair</span>
         </button>
-
-        <div class="user-profile" id="user-profile-trigger" style="cursor:pointer;">
-          <div class="user-avatar" id="user-avatar-initials">OK</div>
+        
+        <!-- Interactive User Profile Button -->
+        <div class="user-profile" id="user-profile-trigger" style="cursor: pointer;">
+          <div class="user-avatar" id="user-avatar-initials">DR</div>
           <div class="user-info">
-            <h4 id="user-display-name">Utilisateur</h4>
-            <span class="role-badge" id="user-role-badge">Rôle</span>
+            <h4 id="user-display-name">Dr. Oncle</h4>
+            <p data-i18n="user_role">Directeur Clinique</p>
           </div>
-          <button class="btn-icon logout-btn-sidebar" id="logout-btn" title="Se déconnecter">
-            <i data-lucide="log-out"></i>
-          </button>
         </div>
       </div>
     </aside>
 
-    <!-- ── Main Content ──────────────────────────────────────── -->
+    <!-- Main Content Area -->
     <main class="main-content">
-
+      
       <!-- Top Header -->
       <header class="top-header">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <button class="btn btn-secondary mobile-menu-toggle" id="mobile-menu-toggle" style="padding:0.5rem 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <!-- Mobile Menu Toggle Button -->
+          <button class="btn btn-secondary mobile-menu-toggle" id="mobile-menu-toggle" style="padding: 0.5rem 0.75rem;">
             <i data-lucide="menu"></i>
           </button>
           <div class="page-title">
             <h1 id="current-tab-title" data-i18n="nav_dashboard">Tableau de bord</h1>
           </div>
         </div>
-
+        
         <div class="header-actions">
-          <!-- Session badge (non-chef_service) -->
-          <span class="badge badge-session" id="session-badge-header" style="display:none;">
-            <i data-lucide="layers"></i>
-            <span id="session-badge-name">Session</span>
-          </span>
-
-          <span class="badge badge-primary" id="live-time-badge">Chargement...</span>
-
-          <!-- Chef Session: create first RDV -->
-          <button class="btn btn-accent" id="global-new-first-rdv-btn" style="display:none;">
-            <i data-lucide="calendar-heart"></i>
-            <span>1er RDV</span>
-          </button>
-
-          <!-- Praticien / Chef Session: schedule follow-up -->
-          <button class="btn btn-primary" id="global-new-rdv-btn" style="display:none;">
+          <span class="badge badge-primary" id="live-time-badge">Mardi 2 Juin 2026</span>
+          <button class="btn btn-primary" id="global-new-rdv-btn">
             <i data-lucide="calendar-plus"></i>
             <span data-i18n="btn_schedule_apt">Planifier un RDV</span>
           </button>
         </div>
       </header>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- 1. DASHBOARD                                        -->
-      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- View Panes -->
+      
+      <!-- 1. Dashboard Tab -->
       <section class="tab-pane active" id="dashboard">
+        <!-- Stats Widgets -->
         <div class="stats-grid">
           <div class="stat-card glass-panel">
-            <div class="stat-icon primary"><i data-lucide="calendar"></i></div>
+            <div class="stat-icon primary">
+              <i data-lucide="calendar"></i>
+            </div>
             <div class="stat-details">
               <h3 id="stat-sessions-today">0</h3>
               <p data-i18n="stat_sessions">RDV Aujourd'hui</p>
             </div>
           </div>
           <div class="stat-card glass-panel">
-            <div class="stat-icon accent"><i data-lucide="users-round"></i></div>
+            <div class="stat-icon accent">
+              <i data-lucide="users-round"></i>
+            </div>
             <div class="stat-details">
               <h3 id="stat-total-patients">0</h3>
               <p data-i18n="stat_patients">Patients Actifs</p>
             </div>
           </div>
           <div class="stat-card glass-panel">
-            <div class="stat-icon success"><i data-lucide="stethoscope"></i></div>
+            <div class="stat-icon success">
+              <i data-lucide="heart-pulse"></i>
+            </div>
             <div class="stat-details">
               <h3 id="stat-active-therapists">0</h3>
-              <p>Praticiens</p>
+              <p data-i18n="stat_team">Membres Équipe</p>
             </div>
           </div>
           <div class="stat-card glass-panel">
-            <div class="stat-icon warning"><i data-lucide="clock"></i></div>
+            <div class="stat-icon warning">
+              <i data-lucide="clock"></i>
+            </div>
             <div class="stat-details">
-              <h3 id="stat-pending-hours">0</h3>
-              <p>RDVs Planifiés</p>
+              <h3 id="stat-pending-hours">0h</h3>
+              <p data-i18n="stat_hours">Heures de Session</p>
             </div>
           </div>
         </div>
 
         <div class="dashboard-grid">
-          <!-- Today's Sessions -->
-          <div class="glass-panel" style="display:flex;flex-direction:column;gap:1rem;overflow:hidden;">
+          <!-- Main Activity Panel (Today's RDVs) -->
+          <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1rem; overflow: hidden;">
             <div class="panel-header">
-              <h2 data-i18n="dash_sessions_title">Séances d'aujourd'hui</h2>
+              <h2 data-i18n="dash_sessions_title">Sessions planifiées aujourd'hui</h2>
               <span class="badge badge-muted" id="today-rdv-count-badge">0 rendez-vous</span>
             </div>
             <div class="table-container">
               <table class="custom-table">
                 <thead>
                   <tr>
-                    <th>Heure</th>
-                    <th>Patient</th>
-                    <th>Praticien / Session</th>
-                    <th>Type</th>
-                    <th>Statut</th>
+                    <th data-i18n="table_time">Heure</th>
+                    <th data-i18n="table_patient">Patient</th>
+                    <th data-i18n="table_therapist">Thérapeute / Spécialité</th>
+                    <th data-i18n="table_type">Type</th>
+                    <th data-i18n="table_status">Statut</th>
                   </tr>
                 </thead>
-                <tbody id="today-appointments-table"></tbody>
+                <tbody id="today-appointments-table">
+                  <!-- JS generated -->
+                </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Quick Actions -->
-          <div class="glass-panel" style="display:flex;flex-direction:column;gap:1.5rem;">
+          <!-- Shortcuts & Quick Actions -->
+          <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1.5rem;">
             <div class="panel-header">
               <h2 data-i18n="dash_actions_title">Actions Rapides</h2>
             </div>
-            <button class="btn btn-primary" id="dash-quick-patient-btn" style="width:100%;justify-content:flex-start;padding:1rem;" onclick="OrthoKine.openPatientModal()">
+            
+            <button class="btn btn-primary" id="dash-quick-patient-btn" style="width: 100%; justify-content: flex-start; padding: 1rem;">
               <i data-lucide="user-plus"></i>
-              <span data-i18n="btn_add_patient">Enregistrer un Patient</span>
+              <span data-i18n="action_new_patient">Créer un profil patient</span>
             </button>
-            <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;padding:1rem;" onclick="OrthoKine.openAppointmentModal()">
-              <i data-lucide="calendar-plus"></i>
-              <span data-i18n="btn_schedule_apt">Planifier un RDV</span>
+            
+            <button class="btn btn-secondary" id="dash-view-calendar-btn" style="width: 100%; justify-content: flex-start; padding: 1rem;">
+              <i data-lucide="calendar"></i>
+              <span data-i18n="action_view_calendar">Ouvrir le calendrier général</span>
             </button>
-            <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;padding:1rem;" onclick="OrthoKine.navigateTo('patients')">
-              <i data-lucide="clipboard-list"></i>
-              <span>Voir tous les patients</span>
-            </button>
-          </div>
-        </div>
 
-        <!-- Sessions Overview (chef_service only) -->
-        <div id="sessions-overview-dash" class="sessions-overview-grid" style="display:none;"></div>
-      </section>
-
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- 2. SESSIONS (chef_service)                          -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <section class="tab-pane" id="sessions">
-        <div class="glass-panel">
-          <div class="panel-header">
-            <h2>Gestion des Sessions</h2>
-            <span class="badge badge-muted">4 sessions actives</span>
-          </div>
-          <div class="table-container">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>Session</th>
-                  <th>Chef de Session</th>
-                  <th>Praticiens</th>
-                  <th>Patients</th>
-                  <th>Activité RDV</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="sessions-table-body"></tbody>
-            </table>
+            <button class="btn btn-secondary" id="dash-view-team-btn" style="width: 100%; justify-content: flex-start; padding: 1rem;">
+              <i data-lucide="user-check"></i>
+              <span data-i18n="action_manage_team">Gérer l'équipe</span>
+            </button>
           </div>
         </div>
       </section>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- 3. MON ÉQUIPE (chef_session)                        -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <section class="tab-pane" id="mon_equipe">
-        <div class="section-header-row">
-          <h2 style="margin:0;">Session : <span id="mon-equipe-session-name">—</span></h2>
-          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-            <button class="btn btn-secondary" id="assign-pr-trigger">
-              <i data-lucide="user-plus"></i> Ajouter un Praticien
-            </button>
-            <button class="btn btn-accent" onclick="OrthoKine.openFirstRdvModal()">
-              <i data-lucide="calendar-heart"></i> Créer 1er RDV
-            </button>
-          </div>
-        </div>
-
-        <!-- Team table -->
-        <div class="glass-panel" style="margin-top:1.5rem;">
-          <div class="panel-header">
-            <h2>Praticiens de ma session</h2>
-          </div>
-          <div class="table-container">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>Praticien</th>
-                  <th>Spécialité</th>
-                  <th>Session</th>
-                  <th>Activité</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="equipe-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Séances de la session -->
-        <div class="glass-panel" style="margin-top:1.5rem;">
-          <div class="panel-header">
-            <h2>Séances de ma session</h2>
-          </div>
-          <div class="table-container">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>Date / Heure</th>
-                  <th>Patient</th>
-                  <th>Praticien</th>
-                  <th>Session</th>
-                  <th>Type</th>
-                  <th>Statut</th>
-                </tr>
-              </thead>
-              <tbody id="appointments-list-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- 4. PATIENTS                                          -->
-      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- 2. Patients Tab -->
       <section class="tab-pane" id="patients">
         <div class="glass-panel">
-          <div class="panel-header">
-            <h2 data-i18n="patients_title">Patients</h2>
-            <button class="btn btn-primary" id="add-patient-trigger">
-              <i data-lucide="user-plus"></i>
-              <span data-i18n="btn_add_patient">Ajouter Patient</span>
-            </button>
-          </div>
-          <div class="search-bar-wrapper">
-            <div class="search-bar">
-              <i data-lucide="search"></i>
-              <input type="search" id="patient-search-input" class="form-control" data-i18n-placeholder="search_placeholder" placeholder="Rechercher un patient...">
+          <div class="panel-header" id="patients-panel-header">
+            <h2 data-i18n="patients_title">Registre des Patients</h2>
+            <div class="patients-header-actions" style="display: flex; gap: 1rem;">
+              <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="patient-search-input" placeholder="Rechercher par nom..." data-i18n-placeholder="search_placeholder">
+              </div>
+              <button class="btn btn-primary" id="add-patient-trigger">
+                <i data-lucide="user-plus"></i>
+                <span data-i18n="btn_register_patient">Enregistrer Patient</span>
+              </button>
             </div>
           </div>
+          
           <div class="table-container">
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th data-i18n="table_patient">Patient</th>
-                  <th>Condition</th>
-                  <th>Session</th>
-                  <th>Praticien</th>
-                  <th>Séances</th>
-                  <th data-i18n="table_status">Statut</th>
-                  <th data-i18n="table_actions">Actions</th>
+                  <th data-i18n="th_p_name">Nom du Patient</th>
+                  <th data-i18n="th_p_age">Âge / Genre</th>
+                  <th data-i18n="th_p_condition">Diagnostic principal</th>
+                  <th data-i18n="th_p_therapist">Thérapeute assigné</th>
+                  <th data-i18n="th_p_contact">Contact principal</th>
+                  <th data-i18n="th_p_status">Statut</th>
+                  <th data-i18n="th_p_actions">Actions</th>
                 </tr>
               </thead>
-              <tbody id="patients-table-body"></tbody>
+              <tbody id="patients-table-body">
+                <!-- JS generated -->
+              </tbody>
             </table>
           </div>
         </div>
       </section>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- 5. APPOINTMENTS / CALENDAR                          -->
-      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- 3. Appointments Tab (Calendar View) -->
       <section class="tab-pane" id="appointments">
-        <div class="calendar-widget glass-panel">
-          <div class="calendar-header">
-            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" id="calendar-prev-btn"><i data-lucide="chevron-left"></i></button>
-              <h2 id="calendar-current-month-year" style="min-width:180px;text-align:center;">Juin 2026</h2>
-              <button class="btn btn-secondary btn-sm" id="calendar-next-btn"><i data-lucide="chevron-right"></i></button>
-              <button class="btn btn-secondary btn-sm" id="calendar-today-btn">Aujourd'hui</button>
+        <div class="calendar-widget">
+          <div class="calendar-header" id="calendar-view-header">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <h3 id="calendar-current-month-year">Juin 2026</h3>
+              <span class="badge badge-primary" id="calendar-filter-badge" data-i18n="filter_all_therapists">Tous les thérapeutes</span>
             </div>
-            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-              <span class="badge badge-muted" id="calendar-filter-badge">Tous les praticiens</span>
-              <select class="form-control form-control-sm" id="calendar-therapist-filter">
-                <option value="all">Tous les praticiens</option>
+            
+            <div class="calendar-view-controls" style="display: flex; gap: 0.75rem; align-items: center;">
+              <!-- Therapist Filter Selector -->
+              <select id="calendar-therapist-filter" class="form-control" style="width: 200px; padding: 0.5rem 0.75rem;">
+                <option value="all" data-i18n="filter_all_therapists">Tous les thérapeutes</option>
+                <!-- JS generated options -->
               </select>
+              
+              <div class="calendar-nav">
+                <button class="btn btn-secondary" id="calendar-prev-btn" style="padding: 0.5rem;"><i data-lucide="chevron-left"></i></button>
+                <button class="btn btn-secondary" id="calendar-today-btn" data-i18n="cal_today">Aujourd'hui</button>
+                <button class="btn btn-secondary" id="calendar-next-btn" style="padding: 0.5rem;"><i data-lucide="chevron-right"></i></button>
+              </div>
             </div>
           </div>
 
-          <div class="calendar-days-header">
-            <div>Lun</div><div>Mar</div><div>Mer</div>
-            <div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+          <div class="calendar-grid">
+            <div class="calendar-day-label" data-i18n="day_mon">Lun</div>
+            <div class="calendar-day-label" data-i18n="day_tue">Mar</div>
+            <div class="calendar-day-label" data-i18n="day_wed">Mer</div>
+            <div class="calendar-day-label" data-i18n="day_thu">Jeu</div>
+            <div class="calendar-day-label" data-i18n="day_fri">Ven</div>
+            <div class="calendar-day-label" data-i18n="day_sat">Sam</div>
+            <div class="calendar-day-label" data-i18n="day_sun">Dim</div>
           </div>
-
-          <div class="calendar-grid" id="calendar-grid"></div>
+          
+          <div class="calendar-grid" id="calendar-dates-container" style="margin-top: 0.5rem;">
+            <!-- Dates will be dynamically injected -->
+          </div>
         </div>
       </section>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- 6. TEAM / PRATICIENS (chef_service)                 -->
-      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- 4. Team Tab -->
       <section class="tab-pane" id="team">
-        <div class="glass-panel">
+        <div class="glass-panel" style="margin-bottom: 2rem;">
           <div class="panel-header">
-            <h2>Praticiens</h2>
+            <h2 data-i18n="team_title">Notre Équipe de Praticiens</h2>
             <button class="btn btn-primary" id="add-team-trigger">
-              <i data-lucide="user-plus"></i> Ajouter un Praticien
+              <i data-lucide="user-plus"></i>
+              <span data-i18n="btn_add_team">Ajouter un praticien</span>
             </button>
           </div>
-          <div class="table-container">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>Praticien</th>
-                  <th>Spécialité</th>
-                  <th>Session</th>
-                  <th>Activité</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="team-table-body"></tbody>
-            </table>
+          
+          <div class="team-grid" id="team-members-grid">
+            <!-- JS Injected -->
           </div>
         </div>
       </section>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- 7. SETTINGS                                          -->
-      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- 5. Settings Tab -->
       <section class="tab-pane" id="settings">
-        <div class="glass-panel" style="max-width:600px;">
+        <div class="glass-panel" style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
           <div class="panel-header">
-            <h2 data-i18n="settings_title">Paramètres</h2>
+            <h2 data-i18n="settings_title">Paramètres Généraux</h2>
           </div>
+
           <div class="form-group">
-            <label data-i18n="settings_lang_label">Langue de l'interface</label>
-            <select class="form-control" id="language-selector">
-              <option value="fr">Français</option>
-              <option value="en">English</option>
-              <option value="es">Español</option>
+            <label for="language-selector" data-i18n="settings_lang_label">Langue de l'application</label>
+            <select id="language-selector" class="form-control" style="width: 100%; margin-top: 0.5rem; font-weight: 500;">
+              <option value="fr">Français (Default)</option>
+              <option value="en">English (Anglais)</option>
+              <option value="es">Español (Espagnol)</option>
             </select>
+            <p style="font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-top: 0.5rem;" data-i18n="settings_lang_hint">
+              Le changement de langue mettra à jour instantanément toutes les interfaces et formulaires.
+            </p>
           </div>
-          <button class="btn btn-primary" id="save-settings-btn">
-            <i data-lucide="save"></i>
-            <span data-i18n="btn_save_settings">Enregistrer les paramètres</span>
+
+          <div style="border-top: 1px solid hsl(var(--border)); padding-top: 1.5rem; margin-top: 0.5rem; display: flex; justify-content: flex-end;">
+            <button class="btn btn-primary" id="save-settings-btn" data-i18n="settings_save_btn">
+              Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Profile Tab -->
+      <section class="tab-pane" id="profile">
+        <div class="glass-panel" style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 2rem;">
+          <div class="team-card-avatar" style="width: 100px; height: 100px; font-size: 2.2rem; margin-bottom: 1.5rem;">DR</div>
+          
+          <h2 style="font-family: var(--font-title); font-size: 1.8rem; font-weight: 700;" id="profile-display-name">Dr. Oncle</h2>
+          <p style="color: hsl(var(--primary)); font-weight: 600; font-size: 1rem; margin-top: 0.25rem;" data-i18n="profile_specialty">Orthophoniste & Directeur Clinique</p>
+          
+          <div style="width: 100%; border-top: 1px solid hsl(var(--border)); margin: 2rem 0; padding-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span style="color: hsl(var(--muted-foreground)); font-weight: 500;" data-i18n="profile_email_label">Identifiant E-mail</span>
+              <strong style="font-weight: 600;">admin@orthokine.com</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span style="color: hsl(var(--muted-foreground)); font-weight: 500;" data-i18n="profile_privileges">Permissions</span>
+              <strong style="font-weight: 600;"><span class="badge badge-success" data-i18n="profile_role_admin">Administrateur</span></strong>
+            </div>
+          </div>
+
+          <button class="btn btn-danger" id="logout-btn" style="width: 100%; padding: 0.85rem;" data-i18n="profile_logout_btn">
+            <i data-lucide="log-out"></i>
+            <span>Se déconnecter</span>
           </button>
         </div>
       </section>
@@ -449,319 +365,192 @@
     </main>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- MODALS                                                      -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-
-  <!-- ── 1. Patient Modal (enriched) ─────────────────────────── -->
-  <dialog class="modal-dialog" id="patient-modal">
+  <!-- Native Modal Dialogs (Animated with CSS Starting Styles) -->
+  
+  <!-- Add/Edit Patient Dialog -->
+  <dialog id="patient-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="patient-modal-title">Enregistrer Nouveau Patient</h3>
-        <button class="btn-close" onclick="document.getElementById('patient-modal').close()">
+        <h3 id="patient-modal-title" data-i18n="modal_patient_new">Enregistrer Nouveau Patient</h3>
+        <button class="modal-close" onclick="document.getElementById('patient-modal').close()">
           <i data-lucide="x"></i>
         </button>
       </div>
-      <form id="patient-form" class="modal-body">
+      
+      <form id="patient-form">
         <input type="hidden" id="patient-form-id">
-
-        <div class="form-section-title">Informations personnelles</div>
-        <div class="form-grid-2">
+        <div class="form-row">
           <div class="form-group">
-            <label for="p-name">Nom complet *</label>
-            <input type="text" id="p-name" class="form-control" required placeholder="Prénom Nom">
+            <label for="p-name" data-i18n="form_p_name">Nom Complet</label>
+            <input type="text" id="p-name" class="form-control" required placeholder="Ex. Jean Dupont">
           </div>
           <div class="form-group">
-            <label for="p-age">Âge *</label>
-            <input type="number" id="p-age" class="form-control" required min="0" max="120">
+            <label for="p-age" data-i18n="form_p_age">Âge</label>
+            <input type="number" id="p-age" class="form-control" required min="0" max="150" placeholder="Ex. 42">
           </div>
+        </div>
+        
+        <div class="form-row">
           <div class="form-group">
-            <label for="p-gender">Genre *</label>
-            <select id="p-gender" class="form-control" required>
-              <option value="Masculin">Masculin</option>
-              <option value="Féminin">Féminin</option>
-              <option value="Autre">Autre</option>
+            <label for="p-gender" data-i18n="form_p_gender">Genre</label>
+            <select id="p-gender" class="form-control">
+              <option value="Male" data-i18n="gender_male">Homme</option>
+              <option value="Female" data-i18n="gender_female">Femme</option>
+              <option value="Other" data-i18n="gender_other">Autre</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="p-stat-matrimonial">Statut matrimonial</label>
-            <select id="p-stat-matrimonial" class="form-control">
-              <option value="Célibataire">Célibataire</option>
-              <option value="Marié(e)">Marié(e)</option>
-              <option value="Divorcé(e)">Divorcé(e)</option>
-              <option value="Veuf/Veuve">Veuf/Veuve</option>
-              <option value="N/A">N/A</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="p-fonction">Fonction / Profession</label>
-            <input type="text" id="p-fonction" class="form-control" placeholder="ex: Enseignant, Élève...">
-          </div>
-          <div class="form-group">
-            <label for="p-contact">Contact *</label>
-            <input type="tel" id="p-contact" class="form-control" required placeholder="+225 07 XX XX XX XX">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="p-adresse">Adresse</label>
-          <input type="text" id="p-adresse" class="form-control" placeholder="Quartier, Ville">
-        </div>
-
-        <div class="form-section-title">Informations cliniques</div>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label for="p-condition">Condition / Diagnostic *</label>
-            <input type="text" id="p-condition" class="form-control" required placeholder="ex: Rééducation post-fracture">
-          </div>
-          <div class="form-group">
-            <label for="p-seances">Nombre de séances prescrites</label>
-            <input type="number" id="p-seances" class="form-control" min="0" value="0">
-          </div>
-          <div class="form-group">
-            <label for="p-status">Statut</label>
+            <label for="p-status" data-i18n="form_p_status">Statut</label>
             <select id="p-status" class="form-control">
-              <option value="Actif">Actif</option>
-              <option value="En attente">En attente</option>
-              <option value="Inactif">Inactif</option>
+              <option value="Active" data-i18n="status_active">Actif</option>
+              <option value="On Hold" data-i18n="status_on_hold">En attente</option>
+              <option value="Discharged" data-i18n="status_discharged">Congédié</option>
             </select>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label for="p-condition" data-i18n="form_p_condition">Diagnostic principal / Condition</label>
+          <input type="text" id="p-condition" class="form-control" required placeholder="Ex. Retard de parole, Rééducation LCP">
+        </div>
+        
+        <div class="form-row">
           <div class="form-group">
-            <label for="p-session">Session assignée *</label>
-            <select id="p-session" class="form-control" required></select>
+            <label for="p-contact" data-i18n="form_p_contact">Téléphone Contact</label>
+            <input type="tel" id="p-contact" class="form-control" required placeholder="+33 6 12 34 56 78">
           </div>
           <div class="form-group">
-            <label for="p-praticien">Praticien référent</label>
-            <select id="p-praticien" class="form-control"></select>
+            <label for="p-therapist" data-i18n="form_p_therapist">Thérapeute Principal</label>
+            <select id="p-therapist" class="form-control">
+              <!-- JS Injected -->
+            </select>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="p-histoire">Histoire de la maladie</label>
-          <textarea id="p-histoire" class="form-control" rows="3" placeholder="Antécédents, évolution, contexte clinique..."></textarea>
-        </div>
-        <div class="form-group">
-          <label for="p-notes">Notes complémentaires</label>
-          <textarea id="p-notes" class="form-control" rows="2" placeholder="Observations, remarques..."></textarea>
+          <label for="p-notes" data-i18n="form_p_notes">Notes de suivi & Traitement</label>
+          <textarea id="p-notes" class="form-control" rows="3" placeholder="Symptômes, exercices prescrits, progrès..."></textarea>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('patient-modal').close()">Annuler</button>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('patient-modal').close()" data-i18n="btn_cancel">Annuler</button>
+          <button type="submit" class="btn btn-primary" data-i18n="btn_save">Enregistrer</button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- ── 2. Appointment Modal ─────────────────────────────────── -->
-  <dialog class="modal-dialog" id="appointment-modal">
+  <!-- Add/Edit Appointment Dialog -->
+  <dialog id="appointment-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="appointment-modal-title">Planifier un Rendez-vous</h3>
-        <button class="btn-close" onclick="document.getElementById('appointment-modal').close()">
+        <h3 id="appointment-modal-title" data-i18n="modal_apt_new">Planifier Nouveau RDV</h3>
+        <button class="modal-close" onclick="document.getElementById('appointment-modal').close()">
           <i data-lucide="x"></i>
         </button>
       </div>
-      <form id="appointment-form" class="modal-body">
+      
+      <form id="appointment-form">
         <input type="hidden" id="appointment-form-id">
-        <div class="form-grid-2">
+        <div class="form-group">
+          <label for="apt-patient" data-i18n="form_apt_patient">Patient</label>
+          <select id="apt-patient" class="form-control" required>
+            <!-- JS Injected -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="apt-therapist" data-i18n="form_apt_therapist">Thérapeute</label>
+          <select id="apt-therapist" class="form-control" required>
+            <!-- JS Injected -->
+          </select>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="apt-patient">Patient *</label>
-            <select id="apt-patient" class="form-control" required></select>
-          </div>
-          <div class="form-group">
-            <label for="apt-praticien">Praticien *</label>
-            <select id="apt-praticien" class="form-control" required></select>
-          </div>
-          <div class="form-group">
-            <label for="apt-session">Session *</label>
-            <select id="apt-session" class="form-control" required></select>
-          </div>
-          <div class="form-group">
-            <label for="apt-type">Type de séance *</label>
-            <select id="apt-type" class="form-control" required>
-              <option value="Séance de rééducation">Séance de rééducation</option>
-              <option value="Bilan initial">Bilan initial</option>
-              <option value="Séance pédiatrique">Séance pédiatrique</option>
-              <option value="Séance de marche">Séance de marche</option>
-              <option value="Bilan vestibulaire">Bilan vestibulaire</option>
-              <option value="Suivi">Suivi</option>
-              <option value="Autre">Autre</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="apt-date">Date *</label>
+            <label for="apt-date" data-i18n="form_apt_date">Date</label>
             <input type="date" id="apt-date" class="form-control" required>
           </div>
           <div class="form-group">
-            <label for="apt-time">Heure *</label>
+            <label for="apt-time" data-i18n="form_apt_time">Heure</label>
             <input type="time" id="apt-time" class="form-control" required>
           </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="apt-status">Statut</label>
+            <label for="apt-type" data-i18n="form_apt_type">Type de RDV</label>
+            <select id="apt-type" class="form-control">
+              <option value="Initial Evaluation" data-i18n="type_evaluation">Bilan Initial</option>
+              <option value="Speech Therapy Session" data-i18n="type_speech">Séance d'Orthophonie</option>
+              <option value="Kinesitherapy Session" data-i18n="type_kine">Séance de Kinésithérapie</option>
+              <option value="Follow-up" data-i18n="type_follow_up">Suivi régulier</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="apt-status" data-i18n="form_apt_status">Statut</label>
             <select id="apt-status" class="form-control">
-              <option value="Planifiée">Planifiée</option>
-              <option value="En cours">En cours</option>
-              <option value="Terminée">Terminée</option>
+              <option value="Scheduled" data-i18n="status_scheduled">Planifié</option>
+              <option value="Completed" data-i18n="status_completed">Effectué</option>
+              <option value="Cancelled" data-i18n="status_cancelled">Annulé</option>
             </select>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('appointment-modal').close()">Annuler</button>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('appointment-modal').close()" data-i18n="btn_cancel">Annuler</button>
+          <button type="submit" class="btn btn-primary" data-i18n="btn_save_apt">Réserver le RDV</button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- ── 3. First RDV Modal (Chef Session) ────────────────────── -->
-  <dialog class="modal-dialog" id="first-rdv-modal">
+  <!-- Add Team Member Dialog -->
+  <dialog id="team-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Créer le Premier Rendez-vous</h3>
-        <button class="btn-close" onclick="document.getElementById('first-rdv-modal').close()">
+        <h3 id="team-modal-title" data-i18n="modal_team_new">Ajouter un Membre de l'Équipe</h3>
+        <button class="modal-close" onclick="document.getElementById('team-modal').close()">
           <i data-lucide="x"></i>
         </button>
       </div>
-      <form id="first-rdv-form" class="modal-body">
-        <p class="text-muted" style="margin-bottom:1rem;">Ce formulaire crée la première consultation pour un patient de votre session.</p>
-        <div class="form-grid-2">
+      
+      <form id="team-form">
+        <div class="form-group">
+          <label for="t-name" data-i18n="form_t_name">Nom Complet</label>
+          <input type="text" id="t-name" class="form-control" required placeholder="Ex. Pierre Dubois">
+        </div>
+        
+        <div class="form-row">
           <div class="form-group">
-            <label for="frdv-patient">Patient *</label>
-            <select id="frdv-patient" class="form-control" required></select>
+            <label for="t-specialty" data-i18n="form_t_specialty">Spécialité</label>
+            <select id="t-specialty" class="form-control">
+              <option value="Orthophoniste" data-i18n="role_ortho">Orthophoniste</option>
+              <option value="Kinésithérapeute" data-i18n="role_kine">Kinésithérapeute</option>
+            </select>
           </div>
           <div class="form-group">
-            <label for="frdv-praticien">Praticien assigné *</label>
-            <select id="frdv-praticien" class="form-control" required></select>
-          </div>
-          <div class="form-group">
-            <label for="frdv-date">Date *</label>
-            <input type="date" id="frdv-date" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label for="frdv-time">Heure *</label>
-            <input type="time" id="frdv-time" class="form-control" required>
+            <label for="t-email" data-i18n="form_t_email">Adresse E-mail</label>
+            <input type="email" id="t-email" class="form-control" required placeholder="pierre@orthokine.com">
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('first-rdv-modal').close()">Annuler</button>
-          <button type="submit" class="btn btn-accent">Créer le 1er RDV</button>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('team-modal').close()" data-i18n="btn_cancel">Annuler</button>
+          <button type="submit" class="btn btn-primary" data-i18n="btn_add_member">Ajouter</button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- ── 4. Praticien Modal ────────────────────────────────────── -->
-  <dialog class="modal-dialog" id="team-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Ajouter un Praticien</h3>
-        <button class="btn-close" onclick="document.getElementById('team-modal').close()">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <form id="team-form" class="modal-body">
-        <div class="form-group">
-          <label for="t-name">Nom complet *</label>
-          <input type="text" id="t-name" class="form-control" required placeholder="Dr. Prénom Nom">
-        </div>
-        <div class="form-group">
-          <label for="t-specialty">Spécialité *</label>
-          <select id="t-specialty" class="form-control" required>
-            <option value="Kinésithérapeute">Kinésithérapeute</option>
-            <option value="Pédiatre">Pédiatre</option>
-            <option value="Orthopédiste">Orthopédiste</option>
-            <option value="Ergothérapeute">Ergothérapeute</option>
-            <option value="Psychologue">Psychologue</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="t-email">Email professionnel *</label>
-          <input type="email" id="t-email" class="form-control" required placeholder="praticien@orthokine.com">
-        </div>
-        <!-- Session selector for chef_service only -->
-        <div class="form-group" id="t-session-row">
-          <label for="t-session">Assigner à la session</label>
-          <select id="t-session" class="form-control">
-            <option value="">-- Aucune session --</option>
-          </select>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('team-modal').close()">Annuler</button>
-          <button type="submit" class="btn btn-primary">Ajouter</button>
-        </div>
-      </form>
-    </div>
-  </dialog>
-
-  <!-- ── 5. Assign Praticien to Session (Chef Session) ────────── -->
-  <dialog class="modal-dialog" id="assign-pr-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Ajouter un Praticien à ma Session</h3>
-        <button class="btn-close" onclick="document.getElementById('assign-pr-modal').close()">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <form id="assign-pr-form" class="modal-body">
-        <p class="text-muted" style="margin-bottom:1rem;">Sélectionnez un praticien à ajouter à votre session.</p>
-        <div class="form-group">
-          <label for="assign-pr-id">Praticien *</label>
-          <select id="assign-pr-id" class="form-control" required></select>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('assign-pr-modal').close()">Annuler</button>
-          <button type="submit" class="btn btn-primary">Ajouter à ma session</button>
-        </div>
-      </form>
-    </div>
-  </dialog>
-
-  <!-- ── 6. Session Assignment Modal (Chef de Service) ────────── -->
-  <dialog class="modal-dialog" id="session-assign-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="session-assign-title">Gérer la Session</h3>
-        <button class="btn-close" onclick="document.getElementById('session-assign-modal').close()">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <form id="session-assign-form" class="modal-body">
-        <input type="hidden" id="session-assign-form-id">
-        <div class="form-group">
-          <label for="sess-chef-user">Chef de Session assigné *</label>
-          <select id="sess-chef-user" class="form-control" required></select>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('session-assign-modal').close()">Annuler</button>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
-        </div>
-      </form>
-    </div>
-  </dialog>
-
-  <!-- ── 7. Day Detail Modal (Calendar) ───────────────────────────── -->
-  <dialog class="modal-dialog" id="day-detail-modal">
-    <div class="modal-content modal-content-wide">
-      <div class="modal-header">
-        <h3 id="day-detail-title">Détail du jour</h3>
-        <button class="btn-close" onclick="document.getElementById('day-detail-modal').close()">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <div class="modal-body" id="day-detail-body" style="max-height:65vh;overflow-y:auto;">
-      </div>
-    </div>
-  </dialog>
-
-  <!-- ── JS Modules ────────────────────────────────────────────── -->
+  <!-- Namespace Modular Scripts -->
   <script src="js/translations.js"></script>
   <script src="js/store.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/router.js"></script>
-  <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/forms.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
