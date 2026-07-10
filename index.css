@@ -47,10 +47,10 @@
 
 [data-theme="dark"] {
   --background: var(--hue) 25% 10%;
-  --foreground: var(--hue) 20% 90%;
+  --foreground: 0 0% 100%;
   
   --card: var(--hue) 25% 13%;
-  --card-foreground: var(--hue) 20% 95%;
+  --card-foreground: 0 0% 100%;
   
   --primary: 238 90% 65%;
   --primary-foreground: 0 0% 100%;
@@ -696,6 +696,7 @@ dialog {
   border: none;
   background: transparent;
   outline: none;
+  color: hsl(var(--foreground));
 }
 
 dialog::backdrop {
@@ -719,6 +720,7 @@ dialog[open]::backdrop {
   width: 90vw;
   max-width: 540px;
   background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
@@ -763,6 +765,18 @@ dialog[open] .modal-content {
 }
 
 .modal-close:hover {
+  color: hsl(var(--foreground));
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  transition: color 0.2s ease;
+}
+.btn-close:hover {
   color: hsl(var(--foreground));
 }
 
