@@ -32,6 +32,19 @@ window.OrthoKine = window.OrthoKine || {};
       mainApp.style.display     = 'none';
     }
 
+    // Password visibility toggle
+    const pwToggle = document.getElementById('password-toggle');
+    const pwInput  = document.getElementById('login-password');
+
+    pwToggle.addEventListener('click', () => {
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      const iconName = isHidden ? 'eye-off' : 'eye';
+      pwToggle.innerHTML = `<i data-lucide="${iconName}"></i>`;
+      lucide.createIcons({ nodes: [pwToggle] });
+      pwToggle.setAttribute('aria-label', isHidden ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+    });
+
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const email    = document.getElementById('login-email').value.trim();

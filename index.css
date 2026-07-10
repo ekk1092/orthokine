@@ -812,6 +812,39 @@ dialog[open] .modal-content {
   box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
 }
 
+/* ── Password Toggle ───────────────────────────────────── */
+.password-wrapper {
+  position: relative;
+}
+.password-wrapper .form-control {
+  width: 100%;
+  padding-right: 3rem;
+}
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  padding: 0.35rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.password-toggle:hover {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--muted) / 0.5);
+}
+.password-toggle svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
